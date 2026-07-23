@@ -623,7 +623,7 @@ function whats(o){
   txt += `Cliente: ${o.cli}\n`;
   txt += `------------------------------\n`;
   o.itens.forEach((i,ix)=>{
-    txt += `${ix+1}) ${i.desc}\n    ${num(i.qtd)} ${i.un} x ${fmt(num(i.vl))} = *${fmt(num(i.qtd)*num(i.vl))}*\n`;
+    txt += `${ix+1}) ${i.desc}\n    ${num(i.qtd).toLocaleString('pt-BR')} ${i.un} x ${fmt(num(i.vl))} = *${fmt(num(i.qtd)*num(i.vl))}*\n`;
   });
   txt += `------------------------------\n`;
   if(o.descR>0){ txt += `Subtotal: ${fmt(o.sub)}\nDesconto: -${fmt(o.descR)}\n`; }
@@ -640,7 +640,7 @@ function whats(o){
 }
 
 /* ---------------- print ---------------- */
-function imprimir(o){
+function renderDoc(o){
   const rows = o.itens.map((i,ix)=>`<tr>
       <td class="ctr">${ix+1}</td>
       <td>${esc(i.desc)}</td>
@@ -693,7 +693,178 @@ function imprimir(o){
       <div>${esc(o.cli)}<br>De acordo — Cliente</div>
     </div>
     <div class="dfoot">Orçamento gerado em ${dataBR(o.data)} · ${esc(cfg.nome)}${cfg.tel? ' · '+esc(cfg.tel):''}</div>`;
-  setTimeout(()=>window.print(), 150);
+}
+
+/* ---------------- gerador de PDF (funciona no iPhone) ---------------- */
+function gerarPDF(o){
+  const W=595.28, H=841.89, M=40, CW=W-2*M, XR=W-M;
+  const cv = document.createElement('canvas').getContext('2d');
+  function tw(s,size,bold){ cv.font=(bold?'bold ':'')+size+'px Helvetica, Arial, sans-serif'; return cv.measureText(String(s)).width; }
+  const MAP={0x2013:0x96,0x2014:0x97,0x2018:0x91,0x2019:0x92,0x201c:0x93,0x201d:0x94,0x2022:0x95,0x2026:0x85,0x20ac:0x80,0x2212:45};
+  function win(s){ let r=''; for(const ch of String(s)){ let c=ch.codePointAt(0); if(c>0xFF) c=MAP[c]||63; r+=String.fromCharCode(c);} return r; }
+  function pe(s){ return s.replace(/\\/g,'\\\\').replace(/\(/g,'\\(').replace(/\)/g,'\\)'); }
+  const INK='0.10 0.10 0.10', GRAY='0.40 0.40 0.40', GOLD='0.79 0.49 0.02', WHT='1 1 1';
+  const pages=[]; let C='', y=M, firstPage=true;
+  const ty = v => H - v;
+  function np(){ pages.push(C); C=''; y=M; firstPage=false; }
+  function txt(x,yy,s,size,opt){ opt=opt||{};
+    C+='BT /'+(opt.bold?'F2':'F1')+' '+size+' Tf '+(opt.color||INK)+' rg 1 0 0 1 '+x.toFixed(2)+' '+(ty(yy)-size*0.85).toFixed(2)+' Tm ('+pe(win(s))+') Tj ET\n'; }
+  function txtR(xr,yy,s,size,opt){ txt(xr-tw(s,size,opt&&opt.bold),yy,s,size,opt); }
+  function rectF(x,yy,w,h,color){ C+=color+' rg '+x.toFixed(2)+' '+(ty(yy)-h).toFixed(2)+' '+w.toFixed(2)+' '+h.toFixed(2)+' re f\n'; }
+  function hline(x1,x2,yy,wd,color){ C+=color+' RG '+wd+' w '+x1.toFixed(2)+' '+ty(yy).toFixed(2)+' m '+x2.toFixed(2)+' '+ty(yy).toFixed(2)+' l S\n'; }
+  function wrap(s,size,maxw,bold){ const out=[];
+    for(const para of String(s).split('\n')){ let line='';
+      for(const w of para.split(' ')){ const t=line?line+' '+w:w;
+        if(tw(t,size,bold)<=maxw || !line) line=t; else { out.push(line); line=w; } }
+      out.push(line); }
+    return out; }
+  function sec(t){ rectF(M,y,CW,16,INK); txt(M+8,y+4.5,t.toUpperCase(),8,{bold:1,color:WHT}); y+=25; }
+
+  /* cabeçalho */
+  C+='q 52 0 0 61 '+M+' '+(ty(y)-61).toFixed(2)+' cm /Im1 Do Q\n';
+  const nomeResto = (cfg.nome.replace(/^GLS\s*/i,'')||'Serralheria').toUpperCase();
+  txt(M+62,y+6,'GLS',17,{bold:1,color:GOLD});
+  txt(M+62+tw('GLS ',17,true),y+6,nomeResto,17,{bold:1});
+  const l1=[cfg.doc&&('CNPJ/CPF: '+cfg.doc), cfg.tel, cfg.email].filter(Boolean).join('   ');
+  if(l1) txt(M+62,y+27,l1,8.5,{color:GRAY});
+  if(cfg.end) txt(M+62,y+39,cfg.end,8.5,{color:GRAY});
+  txtR(XR,y,'ORÇAMENTO',8,{color:GRAY});
+  txtR(XR,y+12,'Nº '+o.num,16,{bold:1,color:GOLD});
+  txtR(XR,y+33,dataBR(o.data),9.5,{color:GRAY});
+  y+=68; hline(M,XR,y,2,'0.91 0.58 0.04'); y+=12;
+
+  /* cliente */
+  sec('Dados do Cliente');
+  txt(M,y,o.cli,11,{bold:1}); y+=15;
+  if(o.tel){ txt(M,y,'Telefone: '+o.tel,9.5); y+=13; }
+  if(o.end){ txt(M,y,'Endereço: '+o.end,9.5); y+=13; }
+  y+=6;
+
+  /* tabela */
+  sec('Descrição dos Serviços / Produtos');
+  const cx={n:M, d:M+26, q:M+300, v:M+368, t:M+448};
+  function thead(){
+    rectF(M,y,CW,16,'0.95 0.88 0.72');
+    txt(cx.n+3,y+4.5,'#',8,{bold:1}); txt(cx.d,y+4.5,'DESCRIÇÃO',8,{bold:1});
+    txt(cx.q,y+4.5,'QTD',8,{bold:1}); txtR(cx.t-8,y+4.5,'VALOR UNIT.',8,{bold:1});
+    txtR(XR-2,y+4.5,'TOTAL',8,{bold:1});
+    y+=20;
+  }
+  thead();
+  o.itens.forEach((it,ix)=>{
+    const lines = wrap(it.desc, 9, cx.q-cx.d-10);
+    const rh = Math.max(lines.length*11.5, 11.5)+6;
+    if(y+rh > H-70){ np(); thead(); }
+    txt(cx.n+3,y,String(ix+1),9,{color:GRAY});
+    lines.forEach((ln,i)=>txt(cx.d,y+i*11.5,ln,9));
+    txt(cx.q,y,num(it.qtd).toLocaleString('pt-BR')+' '+it.un,9);
+    txtR(cx.t-8,y,fmt(num(it.vl)),9);
+    txtR(XR-2,y,fmt(num(it.qtd)*num(it.vl)),9,{bold:1});
+    y+=rh; hline(M,XR,y-4,0.5,'0.85 0.85 0.85');
+  });
+
+  /* totais */
+  if(y > H-160) np();
+  y+=6;
+  const bx=XR-210;
+  txt(bx,y,'Subtotal',10); txtR(XR-2,y,fmt(o.sub),10); y+=15;
+  if(o.descR>0){ txt(bx,y,'Desconto',10); txtR(XR-2,y,'- '+fmt(o.descR),10); y+=15; }
+  rectF(bx-6,y,216,20,INK);
+  txt(bx,y+5,'TOTAL',11,{bold:1,color:WHT});
+  txtR(XR-2,y+4.5,fmt(o.tot),12,{bold:1,color:'0.96 0.73 0.26'});
+  y+=32;
+
+  /* condições */
+  const conds=[
+    o.pgto  && ['Forma de pagamento', o.pgto],
+    cfg.pix && ['PIX', cfg.pix],
+    o.prazo && ['Prazo de entrega', o.prazo],
+    o.val   && ['Validade da proposta', o.val+' dias a partir da data de emissão'],
+    o.gar   && ['Garantia', o.gar],
+    o.obs   && ['Observações', o.obs]
+  ].filter(Boolean);
+  if(conds.length){
+    if(y > H-140) np();
+    sec('Condições');
+    conds.forEach(c=>{
+      const lab=c[0]+': ', lw=tw(lab,9.5,true);
+      const words=String(c[1]).replace(/\n/g,' ');
+      let ln0=''; const rest=[];
+      { let line='', mw=CW-lw-2, out=[];
+        for(const w of words.split(' ')){ const t=line?line+' '+w:w;
+          if(tw(t,9.5)<=mw || !line) line=t; else { out.push(line); line=w; mw=CW; } }
+        out.push(line); ln0=out[0]; rest.push(...out.slice(1)); }
+      if(y > H-70) np();
+      txt(M,y,c[0]+':',9.5,{bold:1});
+      txt(M+lw,y,ln0,9.5); y+=13;
+      rest.forEach(r=>{ if(y > H-70) np(); txt(M,y,r,9.5); y+=13; });
+      y+=1;
+    });
+  }
+
+  /* assinaturas */
+  if(y > H-130) np();
+  y = Math.max(y+45, y+20);
+  const half=(CW-40)/2;
+  hline(M+15,M+15+half-30,y,0.7,'0.5 0.5 0.5');
+  hline(M+half+55,XR-15,y,0.7,'0.5 0.5 0.5');
+  y+=6;
+  { const c1=M+15+(half-30)/2, c2=M+half+55+(XR-15-(M+half+55))/2;
+    txt(c1-tw(cfg.nome,8.5)/2,y,cfg.nome,8.5,{color:GRAY});
+    txt(c2-tw(o.cli,8.5)/2,y,o.cli,8.5,{color:GRAY}); y+=11;
+    const s2='De acordo — Cliente';
+    txt(c2-tw(s2,8.5)/2,y,s2,8.5,{color:GRAY}); }
+
+  /* rodapé */
+  { const f='Orçamento gerado em '+dataBR(o.data)+' · '+cfg.nome+(cfg.tel?' · '+cfg.tel:'');
+    hline(M,XR,H-42,0.5,'0.85 0.85 0.85');
+    txt(W/2-tw(f,8)/2,H-38,f,8,{color:GRAY}); }
+  np();
+
+  /* montagem do arquivo PDF */
+  const enc=s=>{ const b=new Uint8Array(s.length); for(let i=0;i<s.length;i++) b[i]=s.charCodeAt(i)&0xFF; return b; };
+  const ib=atob(LOGO.split(',')[1]); const img=enc(ib);
+  const chunks=[]; let pos=0; const offs=[];
+  function push(s){ const b=typeof s==='string'?enc(s):s; chunks.push(b); pos+=b.length; }
+  function obj(n,body){ offs[n]=pos; push(n+' 0 obj\n'+body+'\nendobj\n'); }
+  function objStream(n,dict,data){ offs[n]=pos; push(n+' 0 obj\n<< '+dict+' /Length '+data.length+' >>\nstream\n'); push(data); push('\nendstream\nendobj\n'); }
+  push('%PDF-1.4\n%\xE2\xE3\xCF\xD3\n');
+  const nP=pages.length, kids=pages.map((_,i)=>(6+2*i)+' 0 R').join(' ');
+  obj(1,'<< /Type /Catalog /Pages 2 0 R >>');
+  obj(2,'<< /Type /Pages /Kids ['+kids+'] /Count '+nP+' >>');
+  obj(3,'<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>');
+  obj(4,'<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>');
+  objStream(5,'/Type /XObject /Subtype /Image /Width 320 /Height 375 /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode',img);
+  pages.forEach((pc,i)=>{
+    obj(6+2*i,'<< /Type /Page /Parent 2 0 R /MediaBox [0 0 '+W+' '+H+'] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> /XObject << /Im1 5 0 R >> >> /Contents '+(7+2*i)+' 0 R >>');
+    objStream(7+2*i,'',enc(pc));
+  });
+  const xp=pos, mx=5+2*nP;
+  let x='xref\n0 '+(mx+1)+'\n0000000000 65535 f \n';
+  for(let i=1;i<=mx;i++) x+=String(offs[i]).padStart(10,'0')+' 00000 n \n';
+  x+='trailer\n<< /Size '+(mx+1)+' /Root 1 0 R >>\nstartxref\n'+xp+'\n%%EOF';
+  push(x);
+  return new Blob(chunks,{type:'application/pdf'});
+}
+
+async function imprimir(o){
+  let blob;
+  try{ blob = gerarPDF(o); }
+  catch(e){ renderDoc(o); setTimeout(()=>window.print(),150); return; }
+  const nomeArq = 'Orcamento-'+o.num+'-'+o.cli.replace(/[^\wÀ-ú ]/g,'').trim().replace(/\s+/g,'-')+'.pdf';
+  try{
+    const file = new File([blob], nomeArq, {type:'application/pdf'});
+    if(navigator.canShare && navigator.canShare({files:[file]})){
+      await navigator.share({files:[file], title:'Orçamento Nº '+o.num});
+      return;
+    }
+  }catch(e){ if(e && e.name==='AbortError') return; }
+  const url = URL.createObjectURL(blob);
+  const w = window.open(url,'_blank');
+  if(!w){
+    const a=document.createElement('a'); a.href=url; a.download=nomeArq; a.click();
+    toast('⬇️ PDF gerado');
+  }
 }
 
 /* ---------------- config ---------------- */
