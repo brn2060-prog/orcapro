@@ -329,6 +329,18 @@
   </div>
 </div>
 
+<!-- ============ MODAL ORÇAMENTO EM IMAGEM ============ -->
+<div class="modal" id="img-modal" onclick="if(event.target===this)fecharImg()">
+  <div class="sheet" style="max-height:92vh">
+    <h3>📄 Orçamento pronto!</h3>
+    <div class="sub"><b style="color:var(--gold2)">Segure o dedo em cima da imagem</b> e escolha <b>Compartilhar</b> (para WhatsApp) ou <b>Adicionar às Fotos</b></div>
+    <img id="img-orc" alt="Orçamento" style="width:100%;border-radius:10px;border:1px solid var(--line);background:#fff;display:block">
+    <button class="btn green" onclick="compartilharImg()">📤 Compartilhar</button>
+    <button class="btn ghost" onclick="baixarPdfSel()">⬇️ Baixar PDF</button>
+    <button class="btn ghost" onclick="fecharImg()">Fechar</button>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 <datalist id="dl-serv"></datalist>
 
@@ -847,24 +859,187 @@ function gerarPDF(o){
   return new Blob(chunks,{type:'application/pdf'});
 }
 
-async function imprimir(o){
-  let blob;
-  try{ blob = gerarPDF(o); }
-  catch(e){ renderDoc(o); setTimeout(()=>window.print(),150); return; }
-  const nomeArq = 'Orcamento-'+o.num+'-'+o.cli.replace(/[^\wÀ-ú ]/g,'').trim().replace(/\s+/g,'-')+'.pdf';
+/* ---------------- orçamento em imagem (fallback universal p/ iPhone) ---------------- */
+let LOGO_IMG = null;
+(function(){ const i=new Image(); i.onload=()=>{LOGO_IMG=i;}; i.src=LOGO; })();
+
+function gerarImagem(o){
+  const S=2.2, W=595, M=40, CW=W-2*M, XR=W-M;
+  const mc = document.createElement('canvas').getContext('2d');
+  const fnt = (size,bold)=>(bold?'bold ':'')+size+'px -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif';
+  function twc(s,size,bold){ mc.font=fnt(size,bold); return mc.measureText(String(s)).width; }
+  function wrapc(s,size,maxw,bold){ const out=[];
+    for(const para of String(s).split('\n')){ let line='';
+      for(const w of para.split(' ')){ const t=line?line+' '+w:w;
+        if(twc(t,size,bold)<=maxw || !line) line=t; else { out.push(line); line=w; } }
+      out.push(line); }
+    return out; }
+  function condWrap(lab,val,size){ const lw=twc(lab+': ',size,true);
+    const words=String(val).replace(/\n/g,' ');
+    let line='', mw=CW-lw-2; const out=[];
+    for(const w of words.split(' ')){ const t=line?line+' '+w:w;
+      if(twc(t,size)<=mw || !line) line=t; else { out.push(line); line=w; mw=CW; } }
+    out.push(line);
+    return {lw, lines:out}; }
+
+  const descW = 300-26-10;
+  const itemLines = o.itens.map(it=>wrapc(it.desc,9,descW));
+  const conds=[
+    o.pgto  && ['Forma de pagamento', o.pgto],
+    cfg.pix && ['PIX', cfg.pix],
+    o.prazo && ['Prazo de entrega', o.prazo],
+    o.val   && ['Validade da proposta', o.val+' dias a partir da data de emissão'],
+    o.gar   && ['Garantia', o.gar],
+    o.obs   && ['Observações', o.obs]
+  ].filter(Boolean);
+  const condW = conds.map(c=>condWrap(c[0], c[1], 9.5));
+
+  let H = 40+68+12+25+15+(o.tel?13:0)+(o.end?13:0)+6+25+20;
+  itemLines.forEach(l=>H+=Math.max(l.length*11.5,11.5)+6);
+  H += 6+15+(o.descR>0?15:0)+20+32;
+  if(conds.length){ H+=25; condW.forEach(cw=>H+=cw.lines.length*13+1); }
+  H += 45+6+11+11+42+30;
+
+  const cnv=document.createElement('canvas');
+  cnv.width=Math.round(W*S); cnv.height=Math.round(H*S);
+  const g=cnv.getContext('2d'); g.scale(S,S); g.textBaseline='top';
+  const INK='#1a1a1a', GRAY='#666666', GOLD='#c97c05', TAN='#f2e0b8', WHT='#ffffff';
+  g.fillStyle=WHT; g.fillRect(0,0,W,H);
+  function txt(x,yy,s,size,opt){ opt=opt||{}; g.font=fnt(size,opt.bold); g.fillStyle=opt.color||INK; g.fillText(String(s),x,yy); }
+  function txtR(xr,yy,s,size,opt){ txt(xr-twc(s,size,opt&&opt.bold),yy,s,size,opt); }
+  function rectF(x,yy,w,h,color){ g.fillStyle=color; g.fillRect(x,yy,w,h); }
+  function hline(x1,x2,yy,wd,color){ g.strokeStyle=color; g.lineWidth=wd; g.beginPath(); g.moveTo(x1,yy); g.lineTo(x2,yy); g.stroke(); }
+  function secc(t){ rectF(M,y,CW,16,INK); txt(M+8,y+4.5,t.toUpperCase(),8,{bold:1,color:WHT}); y+=25; }
+
+  let y=M;
+  if(LOGO_IMG) g.drawImage(LOGO_IMG, M, y, 52, 61);
+  const nomeResto=(cfg.nome.replace(/^GLS\s*/i,'')||'Serralheria').toUpperCase();
+  txt(M+62,y+6,'GLS',17,{bold:1,color:GOLD});
+  txt(M+62+twc('GLS ',17,1),y+6,nomeResto,17,{bold:1});
+  const l1=[cfg.doc&&('CNPJ/CPF: '+cfg.doc), cfg.tel, cfg.email].filter(Boolean).join('   ');
+  if(l1) txt(M+62,y+27,l1,8.5,{color:GRAY});
+  if(cfg.end) txt(M+62,y+39,cfg.end,8.5,{color:GRAY});
+  txtR(XR,y,'ORÇAMENTO',8,{color:GRAY});
+  txtR(XR,y+12,'Nº '+o.num,16,{bold:1,color:GOLD});
+  txtR(XR,y+33,dataBR(o.data),9.5,{color:GRAY});
+  y+=68; hline(M,XR,y,2,'#e8940a'); y+=12;
+
+  secc('Dados do Cliente');
+  txt(M,y,o.cli,11,{bold:1}); y+=15;
+  if(o.tel){ txt(M,y,'Telefone: '+o.tel,9.5); y+=13; }
+  if(o.end){ txt(M,y,'Endereço: '+o.end,9.5); y+=13; }
+  y+=6;
+
+  secc('Descrição dos Serviços / Produtos');
+  const cx={n:M, d:M+26, q:M+300, v:M+368, t:M+448};
+  rectF(M,y,CW,16,TAN);
+  txt(cx.n+3,y+4.5,'#',8,{bold:1}); txt(cx.d,y+4.5,'DESCRIÇÃO',8,{bold:1});
+  txt(cx.q,y+4.5,'QTD',8,{bold:1}); txtR(cx.t-8,y+4.5,'VALOR UNIT.',8,{bold:1});
+  txtR(XR-2,y+4.5,'TOTAL',8,{bold:1});
+  y+=20;
+  o.itens.forEach((it,ix)=>{
+    const lines=itemLines[ix];
+    const rh=Math.max(lines.length*11.5,11.5)+6;
+    txt(cx.n+3,y,String(ix+1),9,{color:GRAY});
+    lines.forEach((ln,i)=>txt(cx.d,y+i*11.5,ln,9));
+    txt(cx.q,y,num(it.qtd).toLocaleString('pt-BR')+' '+it.un,9);
+    txtR(cx.t-8,y,fmt(num(it.vl)),9);
+    txtR(XR-2,y,fmt(num(it.qtd)*num(it.vl)),9,{bold:1});
+    y+=rh; hline(M,XR,y-4,0.5,'#d9d9d9');
+  });
+
+  y+=6;
+  const bx=XR-210;
+  txt(bx,y,'Subtotal',10); txtR(XR-2,y,fmt(o.sub),10); y+=15;
+  if(o.descR>0){ txt(bx,y,'Desconto',10); txtR(XR-2,y,'- '+fmt(o.descR),10); y+=15; }
+  rectF(bx-6,y,216,20,INK);
+  txt(bx,y+5,'TOTAL',11,{bold:1,color:WHT});
+  txtR(XR-2,y+4.5,fmt(o.tot),12,{bold:1,color:'#f5b942'});
+  y+=32;
+
+  if(conds.length){
+    secc('Condições');
+    conds.forEach((c,i)=>{
+      const cw=condW[i];
+      txt(M,y,c[0]+':',9.5,{bold:1});
+      txt(M+cw.lw,y,cw.lines[0],9.5); y+=13;
+      cw.lines.slice(1).forEach(r=>{ txt(M,y,r,9.5); y+=13; });
+      y+=1;
+    });
+  }
+
+  y+=45;
+  const half=(CW-40)/2;
+  hline(M+15,M+15+half-30,y,0.7,'#808080');
+  hline(M+half+55,XR-15,y,0.7,'#808080');
+  y+=6;
+  const c1=M+15+(half-30)/2, c2=M+half+55+(XR-15-(M+half+55))/2;
+  txt(c1-twc(cfg.nome,8.5)/2,y,cfg.nome,8.5,{color:GRAY});
+  txt(c2-twc(o.cli,8.5)/2,y,o.cli,8.5,{color:GRAY}); y+=11;
+  const s2='De acordo — Cliente';
+  txt(c2-twc(s2,8.5)/2,y,s2,8.5,{color:GRAY});
+
+  const f='Orçamento gerado em '+dataBR(o.data)+' · '+cfg.nome+(cfg.tel?' · '+cfg.tel:'');
+  hline(M,XR,H-26,0.5,'#d9d9d9');
+  txt(W/2-twc(f,8)/2,H-21,f,8,{color:GRAY});
+
+  return cnv;
+}
+
+let imgSel = null;
+function fecharImg(){ $('img-modal').classList.remove('on'); }
+function mostrarImagem(o){
+  imgSel = o;
+  const cnv = gerarImagem(o);
+  $('img-orc').src = cnv.toDataURL('image/png');
+  $('img-modal').classList.add('on');
+}
+async function compartilharImg(){
+  if(!imgSel) return;
   try{
+    const cnv = gerarImagem(imgSel);
+    const blob = await new Promise(r=>cnv.toBlob(r,'image/png'));
+    const file = new File([blob],'Orcamento-'+imgSel.num+'.png',{type:'image/png'});
+    if(navigator.canShare && navigator.canShare({files:[file]})){
+      await navigator.share({files:[file], title:'Orçamento Nº '+imgSel.num});
+      return;
+    }
+  }catch(e){ if(e && e.name==='AbortError') return; }
+  toast('👆 Segure o dedo na imagem para salvar');
+}
+function baixarPdfSel(){
+  if(!imgSel) return;
+  try{
+    const blob = gerarPDF(imgSel);
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);
+    a.download='Orcamento-'+imgSel.num+'.pdf';
+    a.click();
+    toast('⬇️ PDF baixado');
+  }catch(e){ toast('⚠️ Use o Compartilhar ou segure na imagem'); }
+}
+
+async function imprimir(o){
+  /* 1) melhor caminho: folha de compartilhar com o PDF */
+  try{
+    const blob = gerarPDF(o);
+    const nomeArq = 'Orcamento-'+o.num+'-'+o.cli.replace(/[^\wÀ-ú ]/g,'').trim().replace(/\s+/g,'-')+'.pdf';
     const file = new File([blob], nomeArq, {type:'application/pdf'});
     if(navigator.canShare && navigator.canShare({files:[file]})){
       await navigator.share({files:[file], title:'Orçamento Nº '+o.num});
       return;
     }
   }catch(e){ if(e && e.name==='AbortError') return; }
-  const url = URL.createObjectURL(blob);
-  const w = window.open(url,'_blank');
-  if(!w){
-    const a=document.createElement('a'); a.href=url; a.download=nomeArq; a.click();
-    toast('⬇️ PDF gerado');
-  }
+  /* 2) desktop com janela própria: abre o PDF em nova aba */
+  try{
+    if(window.self===window.top){
+      const w = window.open(URL.createObjectURL(gerarPDF(o)),'_blank');
+      if(w) return;
+    }
+  }catch(e){}
+  /* 3) fallback universal: orçamento em imagem na tela */
+  try{ mostrarImagem(o); }
+  catch(e){ renderDoc(o); setTimeout(()=>window.print(),150); }
 }
 
 /* ---------------- config ---------------- */
