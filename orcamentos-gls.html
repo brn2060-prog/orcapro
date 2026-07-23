@@ -104,6 +104,13 @@
   .actgrid .btn{margin-top:0}
   .actgrid .full{grid-column:1/-1}
 
+  /* ---------- Catálogo ---------- */
+  .slist{margin-top:10px; max-height:52vh; overflow-y:auto; border:1px solid var(--line); border-radius:12px}
+  .slist .s{display:flex; justify-content:space-between; align-items:center; gap:10px; padding:13px 12px; border-bottom:1px solid var(--line); cursor:pointer; font-size:14.5px}
+  .slist .s:last-child{border-bottom:none}
+  .slist .s:active{background:var(--bg3)}
+  .slist .s .u{color:var(--gold); font-size:11.5px; font-weight:700; white-space:nowrap; background:var(--bg3); border:1px solid var(--line); padding:3px 8px; border-radius:99px}
+
   .toast{position:fixed; left:50%; bottom:96px; transform:translateX(-50%); background:var(--gold); color:#141414; font-weight:700; font-size:14px; padding:11px 20px; border-radius:99px; z-index:200; opacity:0; pointer-events:none; transition:opacity .25s; white-space:nowrap; box-shadow:0 6px 24px rgba(0,0,0,.5)}
   .toast.on{opacity:1}
 
@@ -188,6 +195,7 @@
     <h2 class="sec">Itens do Orçamento</h2>
     <div id="itens"></div>
     <button class="btn ghost" onclick="addItem()">＋ Adicionar item</button>
+    <button class="btn ghost" onclick="abrirCatalogo()" style="border-color:var(--gold);color:var(--gold2)">🔎 Catálogo de serviços</button>
 
     <h2 class="sec">Valores</h2>
     <div class="card">
@@ -310,7 +318,19 @@
   </div>
 </div>
 
+<!-- ============ MODAL CATÁLOGO DE SERVIÇOS ============ -->
+<div class="modal" id="cat-modal" onclick="if(event.target===this)fecharCatalogo()">
+  <div class="sheet">
+    <h3>🔎 Catálogo de serviços</h3>
+    <div class="sub">Toque em um serviço para adicionar ao orçamento — depois é só colocar o preço</div>
+    <input id="cat-busca" placeholder="🔍 Buscar: portão, grade, corrimão..." oninput="renderCatalogo()">
+    <div class="slist" id="cat-lista"></div>
+    <button class="btn ghost" onclick="fecharCatalogo()">Fechar</button>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
+<datalist id="dl-serv"></datalist>
 
 <!-- ============ DOCUMENTO DE IMPRESSÃO ============ -->
 <div id="doc"></div>
@@ -372,7 +392,7 @@ function addItem(data){
   div.className = 'item';
   div.innerHTML = `
     <div class="hd"><span class="n"></span><button title="Remover" onclick="this.closest('.item').remove();renum();calc()">✕</button></div>
-    <input class="i-desc" placeholder="Descrição (ex.: Portão basculante 3x2,5m em metalon)" value="${esc(data.desc)}">
+    <input class="i-desc" list="dl-serv" placeholder="Descrição (ex.: Portão basculante 3x2,5m em metalon)" value="${esc(data.desc)}">
     <div class="r2">
       <input class="i-qtd qty" inputmode="decimal" placeholder="Qtd" value="${esc(data.qtd)}" oninput="calc()">
       <input class="i-un un" placeholder="un" value="${esc(data.un)}">
@@ -531,6 +551,70 @@ function excluirSel(){
 }
 function imprimirSel(){ const o=sel(); if(!o) return; fecharModal(); imprimir(o); }
 function whatsSel(){ const o=sel(); if(!o) return; whats(o); }
+
+/* ---------------- catálogo de serviços ---------------- */
+const SERVICOS = [
+  {n:'Portão basculante em metalon', u:'un'},
+  {n:'Portão deslizante (de correr)', u:'un'},
+  {n:'Portão pivotante', u:'un'},
+  {n:'Portão de 2 folhas (francês)', u:'un'},
+  {n:'Portão social (entrada de pedestre)', u:'un'},
+  {n:'Portão de garagem em chapa galvanizada', u:'un'},
+  {n:'Automação de portão (instalação de motor)', u:'un'},
+  {n:'Manutenção de portão automático', u:'serviço'},
+  {n:'Troca de roldanas e trilho de portão', u:'serviço'},
+  {n:'Solda e reparo em portão ou grade', u:'serviço'},
+  {n:'Grade de proteção para janela', u:'m²'},
+  {n:'Grade de proteção para porta', u:'un'},
+  {n:'Porta de aço em metalon', u:'un'},
+  {n:'Porta de enrolar (instalação/manutenção)', u:'un'},
+  {n:'Janela de aço com grade', u:'un'},
+  {n:'Guarda-corpo em aço', u:'m'},
+  {n:'Corrimão simples de parede', u:'m'},
+  {n:'Corrimão duplo com montantes', u:'m'},
+  {n:'Escada metálica reta', u:'un'},
+  {n:'Escada caracol', u:'un'},
+  {n:'Escada marinheiro', u:'m'},
+  {n:'Cobertura em estrutura metálica com telha', u:'m²'},
+  {n:'Estrutura metálica para telhado', u:'m²'},
+  {n:'Estrutura metálica para mezanino', u:'m²'},
+  {n:'Pergolado metálico', u:'m²'},
+  {n:'Toldo fixo em estrutura metálica', u:'m²'},
+  {n:'Cerca de segurança com lanças', u:'m'},
+  {n:'Alambrado com tela', u:'m²'},
+  {n:'Instalação de concertina', u:'m'},
+  {n:'Portãozinho de jardim', u:'un'},
+  {n:'Mesa / bancada em metalon', u:'un'},
+  {n:'Suporte metálico (TV, prateleira, ar-condicionado)', u:'un'},
+  {n:'Varal de teto ou parede em metal', u:'un'},
+  {n:'Pintura de portão ou grade', u:'m²'}
+];
+$('dl-serv').innerHTML = SERVICOS.map(s=>`<option value="${esc(s.n)}">`).join('');
+
+function norm(s){ return String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''); }
+function abrirCatalogo(){ $('cat-busca').value=''; renderCatalogo(); $('cat-modal').classList.add('on'); }
+function fecharCatalogo(){ $('cat-modal').classList.remove('on'); }
+function renderCatalogo(){
+  const f = norm($('cat-busca').value);
+  const arr = SERVICOS.map((s,i)=>({s,i})).filter(x=>!f || norm(x.s.n).includes(f));
+  $('cat-lista').innerHTML = arr.length
+    ? arr.map(x=>`<div class="s" onclick="usarServico(${x.i})"><span>${esc(x.s.n)}</span><span class="u">${esc(x.s.u)}</span></div>`).join('')
+    : '<div class="empty" style="padding:24px">Nenhum serviço encontrado.<br>Digite direto na descrição do item.</div>';
+}
+function usarServico(i){
+  const s = SERVICOS[i];
+  let alvo = [...document.querySelectorAll('#itens .item')].find(it=>!it.querySelector('.i-desc').value.trim());
+  if(!alvo){
+    addItem({desc:'', qtd:'1', un:s.u, vl:''});
+    const its = document.querySelectorAll('#itens .item');
+    alvo = its[its.length-1];
+  }
+  alvo.querySelector('.i-desc').value = s.n;
+  alvo.querySelector('.i-un').value = s.u;
+  fecharCatalogo(); calc();
+  toast('✅ Adicionado — agora coloque o valor');
+  alvo.querySelector('.i-vl').focus();
+}
 
 /* ---------------- whatsapp ---------------- */
 function whats(o){
