@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contagem de Estoque</title>
+  <style>
+    :root {
+      --azul: #1d4ed8;
+      --azul-escuro: #1e40af;
+      --cinza: #6b7280;
+      --borda: #e5e7eb;
+      --fundo: #f3f4f6;
+      --vermelho: #dc2626;
+      --verde: #16a34a;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      background: var(--fundo);
+      color: #111827;
+      padding: 16px;
+    }
+    .container { max-width: 720px; margin: 0 auto; }
+    h1 { font-size: 1.4rem; margin-bottom: 4px; }
+    .subtitulo { color: var(--cinza); font-size: .9rem; margin-bottom: 16px; }
+
+    .cartao {
+      background: #fff;
+      border: 1px solid var(--borda);
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+
+    form.linha { display: flex; flex-wrap: wrap; gap: 8px; }
+    form.linha input {
+      padding: 10px 12px;
+      border: 1px solid var(--borda);
+      border-radius: 8px;
+      font-size: 1rem;
+    }
+    #codigo { flex: 2 1 160px; }
+    #descricao { flex: 3 1 200px; }
+    #quantidade { flex: 1 1 90px; min-width: 90px; }
+
+    button {
+      padding: 10px 14px;
+      border: none;
+      border-radius: 8px;
+      font-size: .95rem;
+      cursor: pointer;
+      background: var(--azul);
+      color: #fff;
+    }
+    button:hover { background: var(--azul-escuro); }
+    button.secundario { background: #fff; color: #374151; border: 1px solid var(--borda); }
+    button.secundario:hover { background: var(--fundo); }
+    button.perigo { background: #fff; color: var(--vermelho); border: 1px solid var(--borda); }
+    button.perigo:hover { background: #fef2f2; }
+
+    .resumo {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .resumo strong { font-size: 1.3rem; }
+    .resumo .rotulo { color: var(--cinza); font-size: .8rem; display: block; }
+    .resumo .acoes { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; }
+
+    #busca { width: 100%; padding: 10px 12px; border: 1px solid var(--borda); border-radius: 8px; font-size: 1rem; margin-bottom: 12px; }
+
+    table { width: 100%; border-collapse: collapse; }
+    th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--borda); font-size: .95rem; }
+    th { color: var(--cinza); font-weight: 600; font-size: .8rem; text-transform: uppercase; }
+    td.qtd { font-weight: 700; white-space: nowrap; }
+    td.acoes { white-space: nowrap; text-align: right; }
+    td.acoes button { padding: 6px 10px; font-size: .85rem; margin-left: 4px; }
+    .codigo-mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .85rem; color: var(--cinza); }
+
+    .vazio { text-align: center; color: var(--cinza); padding: 24px 0; }
+    .aviso {
+      display: none;
+      background: #fef2f2;
+      color: var(--vermelho);
+      border: 1px solid #fecaca;
+      border-radius: 8px;
+      padding: 10px 12px;
+      margin-top: 8px;
+      font-size: .9rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Contagem de Estoque</h1>
+    <p class="subtitulo">Bipe ou digite o código, informe a quantidade e pressione Enter. Itens repetidos são somados automaticamente.</p>
+
+    <div class="cartao">
+      <form class="linha" id="formulario">
+        <input id="codigo" placeholder="Código / código de barras" autocomplete="off" autofocus required>
+        <input id="descricao" placeholder="Descrição (opcional)" autocomplete="off">
+        <input id="quantidade" type="number" step="any" value="1" placeholder="Qtd" required>
+        <button type="submit">Adicionar</button>
+      </form>
+      <div class="aviso" id="aviso"></div>
+    </div>
+
+    <div class="cartao resumo">
+      <div><span class="rotulo">Itens</span><strong id="totalItens">0</strong></div>
+      <div><span class="rotulo">Unidades</span><strong id="totalUnidades">0</strong></div>
+      <div class="acoes">
+        <button class="secundario" id="btnCsv">Exportar CSV</button>
+        <button class="secundario" id="btnJson">Exportar JSON</button>
+        <button class="perigo" id="btnLimpar">Zerar contagem</button>
+      </div>
+    </div>
+
+    <div class="cartao">
+      <input id="busca" placeholder="Buscar por código ou descrição…" autocomplete="off">
+      <table>
+        <thead>
+          <tr><th>Código</th><th>Descrição</th><th>Qtd</th><th></th></tr>
+        </thead>
+        <tbody id="corpoTabela"></tbody>
+      </table>
+      <div class="vazio" id="mensagemVazio">Nenhum item contado ainda.</div>
+    </div>
+  </div>
+
+  <script src="contagem-estoque.js"></script>
+  <script>
+    'use strict';
+
+    const contagem = new ContagemEstoque({ storage: localStorage });
+
+    const formulario = document.getElementById('formulario');
+    const campoCodigo = document.getElementById('codigo');
+    const campoDescricao = document.getElementById('descricao');
+    const campoQuantidade = document.getElementById('quantidade');
+    const campoBusca = document.getElementById('busca');
+    const corpoTabela = document.getElementById('corpoTabela');
+    const mensagemVazio = document.getElementById('mensagemVazio');
+    const aviso = document.getElementById('aviso');
+
+    function mostrarAviso(mensagem) {
+      aviso.textContent = mensagem;
+      aviso.style.display = mensagem ? 'block' : 'none';
+    }
+
+    function escapar(texto) {
+      const div = document.createElement('div');
+      div.textContent = texto;
+      return div.innerHTML;
+    }
+
+    function renderizar() {
+      const resumo = contagem.resumo();
+      document.getElementById('totalItens').textContent = resumo.itens;
+      document.getElementById('totalUnidades').textContent = resumo.unidades;
+
+      const lista = contagem.itens(campoBusca.value);
+      mensagemVazio.style.display = lista.length ? 'none' : 'block';
+
+      corpoTabela.innerHTML = lista.map(function (item) {
+        return (
+          '<tr data-codigo="' + escapar(item.codigo) + '">' +
+          '<td class="codigo-mono">' + escapar(item.codigo) + '</td>' +
+          '<td>' + (escapar(item.descricao) || '<span class="codigo-mono">—</span>') + '</td>' +
+          '<td class="qtd">' + item.quantidade + '</td>' +
+          '<td class="acoes">' +
+          '<button class="secundario" data-acao="editar" title="Corrigir quantidade">✎</button>' +
+          '<button class="perigo" data-acao="remover" title="Remover item">✕</button>' +
+          '</td></tr>'
+        );
+      }).join('');
+    }
+
+    formulario.addEventListener('submit', function (evento) {
+      evento.preventDefault();
+      mostrarAviso('');
+      try {
+        contagem.registrar(campoCodigo.value, campoDescricao.value, campoQuantidade.value);
+        formulario.reset();
+        campoQuantidade.value = 1;
+        campoCodigo.focus();
+        renderizar();
+      } catch (erro) {
+        mostrarAviso(erro.message);
+      }
+    });
+
+    corpoTabela.addEventListener('click', function (evento) {
+      const botao = evento.target.closest('button');
+      if (!botao) return;
+      const codigo = botao.closest('tr').dataset.codigo;
+
+      if (botao.dataset.acao === 'remover') {
+        if (confirm('Remover o item ' + codigo + ' da contagem?')) {
+          contagem.remover(codigo);
+          renderizar();
+        }
+      } else if (botao.dataset.acao === 'editar') {
+        const item = contagem.obter(codigo);
+        const resposta = prompt('Nova quantidade para ' + codigo + ':', item.quantidade);
+        if (resposta === null) return;
+        try {
+          contagem.definirQuantidade(codigo, resposta);
+          renderizar();
+        } catch (erro) {
+          alert(erro.message);
+        }
+      }
+    });
+
+    campoBusca.addEventListener('input', renderizar);
+
+    document.getElementById('btnLimpar').addEventListener('click', function () {
+      if (confirm('Zerar toda a contagem? Essa ação não pode ser desfeita.')) {
+        contagem.limpar();
+        renderizar();
+      }
+    });
+
+    function baixarArquivo(nome, conteudo, tipo) {
+      const blob = new Blob([conteudo], { type: tipo + ';charset=utf-8' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = nome;
+      link.click();
+      URL.revokeObjectURL(link.href);
+    }
+
+    function carimboData() {
+      return new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-');
+    }
+
+    document.getElementById('btnCsv').addEventListener('click', function () {
+      baixarArquivo('contagem-' + carimboData() + '.csv', '\uFEFF' + contagem.exportarCSV(), 'text/csv');
+    });
+
+    document.getElementById('btnJson').addEventListener('click', function () {
+      baixarArquivo('contagem-' + carimboData() + '.json', contagem.exportarJSON(), 'application/json');
+    });
+
+    renderizar();
+  </script>
+</body>
+</html>
