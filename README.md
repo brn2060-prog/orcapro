@@ -1,24 +1,37 @@
-# Sistema de Contagem de Estoque
+# Sistema de Contagem de Estoque — Adega
 
-Sistema simples de contagem de estoque, feito para ser fácil de **integrar em outro sistema depois**. Sem dependências, sem build, sem servidor — só HTML e JavaScript puro.
+Sistema completo de contagem de estoque para adega (tabacaria, bebidas, cervejas), feito para rodar no celular e ser fácil de **integrar em outro sistema depois**. Sem dependências, sem build, sem servidor — só HTML e JavaScript puro.
 
 ## Arquivos
 
 | Arquivo | O que é |
 |---|---|
-| `contagem-estoque.js` | Módulo com toda a lógica de contagem (portável — é ele que você leva para o outro sistema) |
-| `index.html` | Interface pronta para usar no navegador |
+| `contagem-estoque.js` | Módulo com toda a lógica (portável — é ele que você leva para o outro sistema) |
+| `index.html` | Aplicativo completo para usar no navegador do celular |
 
-## Como usar
+## O que o aplicativo faz
 
-Abra o `index.html` no navegador (basta dar dois cliques no arquivo). Pronto:
+- **Cadastro de itens com foto** (câmera ou galeria — a foto é comprimida e salva no aparelho)
+- **Categorias**: Cervejas, Bebidas, Tabacaria e Outros
+- **Contagem** com botões grandes **+ / −**, toque na quantidade para digitar direto
+- **Leitor de código de barras**: bipe no campo de busca e o item soma +1 sozinho; código desconhecido abre o cadastro já preenchido
+- **Busca** por nome ou código e filtro por categoria
+- **Resumo** com totais por categoria
+- **Exportar CSV** (abre no Excel) e **JSON** (com fotos, para juntar aparelhos ou integrar)
+- **Juntar contagem**: importa o JSON de outro celular e **soma** as quantidades
+- **Zerar quantidades** (mantém o catálogo com fotos para a próxima contagem) ou apagar tudo
+- Dados ficam salvos no aparelho (`localStorage`) — pode fechar e continuar depois
 
-1. Bipe ou digite o **código** do produto, informe a **quantidade** e pressione Enter.
-2. Se o mesmo código for lido de novo, a quantidade é **somada** automaticamente.
-3. Use ✎ para corrigir uma quantidade e ✕ para remover um item.
-4. Exporte a contagem em **CSV** (abre no Excel) ou **JSON** (para importar em outro sistema).
+## Usando em 5 celulares
 
-Os dados ficam salvos no navegador (`localStorage`) — pode fechar a página e continuar a contagem depois.
+1. Abra o `index.html` (ou o link do sistema) em cada celular.
+2. Em **Resumo → Este aparelho**, identifique cada um (ex.: "Celular 1 — João").
+3. Cada pessoa conta uma parte da adega (ex.: um fica na tabacaria, outro nas cervejas…).
+4. No fim, cada celular toca em **Exportar JSON** e envia o arquivo (WhatsApp, e-mail…).
+5. No celular principal: **Juntar contagem** → escolhe cada arquivo recebido. As quantidades são somadas e o catálogo (fotos, códigos) é completado automaticamente.
+6. Do celular principal, exporte o CSV/JSON final.
+
+> Dica: para o catálogo (fotos e nomes) ficar igual nos 5 aparelhos antes da contagem, cadastre tudo em um celular, exporte o JSON e importe nos outros 4 com "Juntar contagem".
 
 ## Como integrar em outro sistema
 
@@ -38,17 +51,39 @@ const ContagemEstoque = require('./contagem-estoque.js');
 ```js
 const contagem = new ContagemEstoque({ storage: localStorage }); // storage é opcional
 
-contagem.registrar('7891000100103', 'Leite Integral 1L', 12); // soma se já existir
-contagem.definirQuantidade('7891000100103', 10);              // substitui a quantidade
-contagem.obter('7891000100103');       // { codigo, descricao, quantidade, atualizadoEm }
-contagem.itens('leite');               // lista (filtro opcional), mais recentes primeiro
-contagem.resumo();                     // { itens: 1, unidades: 10 }
-contagem.remover('7891000100103');
-contagem.limpar();                     // zera tudo
+// catálogo
+const item = contagem.cadastrar({
+  nome: 'Cerveja Heineken 330ml',   // obrigatório
+  codigo: '7896045506040',          // código de barras (opcional)
+  categoria: 'Cervejas',            // Cervejas | Bebidas | Tabacaria | Outros
+  foto: 'data:image/jpeg;base64,…', // opcional
+  quantidade: 0,                    // opcional
+});
+contagem.atualizar(item.id, { nome: '...', codigo: '...', categoria: '...', foto: '...' });
+contagem.remover(item.id);
 
-contagem.exportarJSON();               // string JSON com resumo + itens
-contagem.exportarCSV();                // CSV separado por ";" (padrão Excel/pt-BR)
-contagem.importarJSON(texto);          // importa um JSON exportado (soma com o atual)
+// contagem
+contagem.contar(item.id, +1);            // soma (ou subtrai com negativo, nunca fica < 0)
+contagem.definirQuantidade(item.id, 24); // substitui
+
+// consulta
+contagem.obter(item.id);
+contagem.porCodigo('7896045506040');     // para leitor de código de barras
+contagem.porNome('heineken long neck');  // nome exato, ignora maiúsculas
+contagem.itens('heineken', 'Cervejas');  // filtro e categoria opcionais
+contagem.resumo();                       // { itens, unidades, porCategoria: {...} }
+
+// integração / vários aparelhos
+contagem.exportarJSON('Celular 1');      // catálogo + contagem (com fotos)
+contagem.exportarCSV();                  // separador ";" (padrão Excel/pt-BR), sem fotos
+contagem.importarJSON(texto);            // junta outra contagem: soma quantidades,
+                                         // completa fotos/códigos → { novos, somados }
+
+// recomeçar
+contagem.zerarQuantidades();             // zera tudo, mantém o catálogo
+contagem.limpar();                       // apaga tudo
+
+ContagemEstoque.CATEGORIAS;              // ['Cervejas', 'Bebidas', 'Tabacaria', 'Outros']
 ```
 
 ### Persistência plugável
@@ -56,20 +91,33 @@ contagem.importarJSON(texto);          // importa um JSON exportado (soma com o 
 Por padrão a contagem fica em memória. Passe qualquer objeto com `getItem`/`setItem` para persistir:
 
 ```js
-new ContagemEstoque({ storage: localStorage });                  // navegador
+new ContagemEstoque({ storage: localStorage });                   // navegador
 new ContagemEstoque({ storage: meuStorage, chave: 'filial-01' }); // chave customizada
 ```
 
-Para integrar com um backend, basta enviar o resultado de `exportarJSON()` para a sua API.
+Para integrar com um backend, envie o resultado de `exportarJSON()` para a sua API. Dados salvos pela versão 1 do sistema são migrados automaticamente.
 
-## Formato de exportação
+## Formato de exportação (JSON)
 
 ```json
 {
-  "geradoEm": "2026-08-09T12:00:00.000Z",
-  "resumo": { "itens": 2, "unidades": 27 },
+  "geradoEm": "2026-08-10T12:00:00.000Z",
+  "aparelho": "Celular 1 — João",
+  "resumo": {
+    "itens": 2,
+    "unidades": 31,
+    "porCategoria": { "Cervejas": { "itens": 1, "unidades": 24 }, "...": {} }
+  },
   "itens": [
-    { "codigo": "7891000100103", "descricao": "Leite Integral 1L", "quantidade": 15, "atualizadoEm": "..." }
+    {
+      "id": "7896045506040",
+      "codigo": "7896045506040",
+      "nome": "Cerveja Heineken 330ml",
+      "categoria": "Cervejas",
+      "foto": "data:image/jpeg;base64,…",
+      "quantidade": 24,
+      "atualizadoEm": "2026-08-10T11:58:00.000Z"
+    }
   ]
 }
 ```

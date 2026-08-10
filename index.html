@@ -3,248 +3,765 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Contagem de Estoque</title>
+  <title>Contagem de Estoque — Adega</title>
   <style>
     :root {
-      --azul: #1d4ed8;
-      --azul-escuro: #1e40af;
-      --cinza: #6b7280;
-      --borda: #e5e7eb;
-      --fundo: #f3f4f6;
-      --vermelho: #dc2626;
-      --verde: #16a34a;
+      --fundo: #eef1f4;
+      --cartao: #ffffff;
+      --texto: #16202b;
+      --texto-suave: #5d6b7a;
+      --borda: #dde3e9;
+      --acento: #1d5fd8;
+      --acento-forte: #174db3;
+      --acento-texto: #ffffff;
+      --acento-fundo: #e8effc;
+      --perigo: #c22f2f;
+      --perigo-fundo: #fbeeee;
+      --perigo-borda: #f0cfcf;
+      --ok: #1e7d3c;
+      --ok-fundo: #e9f6ee;
+      --hover-suave: #f2f5f8;
     }
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        --fundo: #12181f;
+        --cartao: #1a232d;
+        --texto: #e8edf2;
+        --texto-suave: #93a1b0;
+        --borda: #2b3641;
+        --acento: #4a86f0;
+        --acento-forte: #6699f4;
+        --acento-texto: #0d1117;
+        --acento-fundo: #1d2c42;
+        --perigo: #ef7070;
+        --perigo-fundo: #2b1c1c;
+        --perigo-borda: #4a2b2b;
+        --ok: #5cc57e;
+        --ok-fundo: #16281d;
+        --hover-suave: #222d39;
+      }
+    }
+    :root[data-theme="dark"] {
+      --fundo: #12181f;
+      --cartao: #1a232d;
+      --texto: #e8edf2;
+      --texto-suave: #93a1b0;
+      --borda: #2b3641;
+      --acento: #4a86f0;
+      --acento-forte: #6699f4;
+      --acento-texto: #0d1117;
+      --acento-fundo: #1d2c42;
+      --perigo: #ef7070;
+      --perigo-fundo: #2b1c1c;
+      --perigo-borda: #4a2b2b;
+      --ok: #5cc57e;
+      --ok-fundo: #16281d;
+      --hover-suave: #222d39;
+    }
+
     * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { -webkit-text-size-adjust: 100%; }
     body {
       font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
       background: var(--fundo);
-      color: #111827;
-      padding: 16px;
+      color: var(--texto);
+      padding: 12px 12px 84px; /* espaço para a barra de abas */
     }
-    .container { max-width: 720px; margin: 0 auto; }
-    h1 { font-size: 1.4rem; margin-bottom: 4px; }
-    .subtitulo { color: var(--cinza); font-size: .9rem; margin-bottom: 16px; }
+    .container { max-width: 640px; margin: 0 auto; }
+    h1 { font-size: 1.2rem; margin-bottom: 12px; }
+    h2 { font-size: 1rem; margin-bottom: 10px; }
 
     .cartao {
-      background: #fff;
+      background: var(--cartao);
+      border: 1px solid var(--borda);
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 12px;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 12px;
       border: 1px solid var(--borda);
       border-radius: 10px;
-      padding: 16px;
-      margin-bottom: 16px;
-    }
-
-    form.linha { display: flex; flex-wrap: wrap; gap: 8px; }
-    form.linha input {
-      padding: 10px 12px;
-      border: 1px solid var(--borda);
-      border-radius: 8px;
       font-size: 1rem;
+      background: var(--cartao);
+      color: var(--texto);
     }
-    #codigo { flex: 2 1 160px; }
-    #descricao { flex: 3 1 200px; }
-    #quantidade { flex: 1 1 90px; min-width: 90px; }
+    input::placeholder { color: var(--texto-suave); }
+    input:focus, select:focus, button:focus-visible {
+      outline: 2px solid var(--acento);
+      outline-offset: 1px;
+    }
+    label { display: block; font-size: .8rem; color: var(--texto-suave); margin: 10px 0 4px; }
 
     button {
-      padding: 10px 14px;
+      padding: 12px 16px;
       border: none;
-      border-radius: 8px;
-      font-size: .95rem;
+      border-radius: 10px;
+      font-size: 1rem;
       cursor: pointer;
-      background: var(--azul);
-      color: #fff;
+      background: var(--acento);
+      color: var(--acento-texto);
     }
-    button:hover { background: var(--azul-escuro); }
-    button.secundario { background: #fff; color: #374151; border: 1px solid var(--borda); }
-    button.secundario:hover { background: var(--fundo); }
-    button.perigo { background: #fff; color: var(--vermelho); border: 1px solid var(--borda); }
-    button.perigo:hover { background: #fef2f2; }
+    button:hover { background: var(--acento-forte); }
+    button.secundario { background: var(--cartao); color: var(--texto); border: 1px solid var(--borda); }
+    button.secundario:hover { background: var(--hover-suave); }
+    button.perigo { background: var(--cartao); color: var(--perigo); border: 1px solid var(--borda); }
+    button.perigo:hover { background: var(--perigo-fundo); }
 
-    .resumo {
+    /* abas inferiores */
+    nav {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: var(--cartao);
+      border-top: 1px solid var(--borda);
       display: flex;
-      gap: 16px;
-      align-items: center;
-      flex-wrap: wrap;
+      z-index: 10;
+      padding-bottom: env(safe-area-inset-bottom);
     }
-    .resumo strong { font-size: 1.3rem; }
-    .resumo .rotulo { color: var(--cinza); font-size: .8rem; display: block; }
-    .resumo .acoes { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; }
+    nav button {
+      flex: 1;
+      background: none;
+      color: var(--texto-suave);
+      border: none;
+      border-radius: 0;
+      padding: 12px 4px 14px;
+      font-size: .9rem;
+      border-top: 3px solid transparent;
+    }
+    nav button:hover { background: var(--hover-suave); }
+    nav button.ativa { color: var(--acento); border-top-color: var(--acento); font-weight: 600; }
 
-    #busca { width: 100%; padding: 10px 12px; border: 1px solid var(--borda); border-radius: 8px; font-size: 1rem; margin-bottom: 12px; }
+    .tela { display: none; }
+    .tela.ativa { display: block; }
 
-    table { width: 100%; border-collapse: collapse; }
-    th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--borda); font-size: .95rem; }
-    th { color: var(--cinza); font-weight: 600; font-size: .8rem; text-transform: uppercase; }
-    td.qtd { font-weight: 700; white-space: nowrap; }
-    td.acoes { white-space: nowrap; text-align: right; }
-    td.acoes button { padding: 6px 10px; font-size: .85rem; margin-left: 4px; }
-    .codigo-mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .85rem; color: var(--cinza); }
+    /* chips de categoria */
+    .chips { display: flex; gap: 6px; flex-wrap: wrap; margin: 10px 0; }
+    .chips button {
+      padding: 7px 12px;
+      font-size: .85rem;
+      border-radius: 999px;
+      background: var(--cartao);
+      color: var(--texto);
+      border: 1px solid var(--borda);
+    }
+    .chips button.ativa { background: var(--acento); color: var(--acento-texto); border-color: var(--acento); }
 
-    .vazio { text-align: center; color: var(--cinza); padding: 24px 0; }
-    .aviso {
+    /* lista de itens */
+    .item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--borda);
+    }
+    .item:last-child { border-bottom: none; }
+    .miniatura {
+      width: 52px; height: 52px;
+      border-radius: 10px;
+      object-fit: cover;
+      background: var(--acento-fundo);
+      color: var(--acento);
+      border: 1px solid var(--borda);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 1.2rem;
+      flex-shrink: 0;
+      cursor: pointer;
+    }
+    .item .info { flex: 1; min-width: 0; }
+    .item .nome { font-weight: 600; font-size: .95rem; overflow-wrap: anywhere; }
+    .item .detalhe { font-size: .78rem; color: var(--texto-suave); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+    .item .qtd {
+      font-size: 1.25rem;
+      font-weight: 700;
+      min-width: 44px;
+      text-align: center;
+      font-variant-numeric: tabular-nums;
+      cursor: pointer;
+    }
+    .item .botoes { display: flex; gap: 6px; }
+    .item .botoes button {
+      width: 44px; height: 44px;
+      padding: 0;
+      font-size: 1.3rem;
+      line-height: 1;
+    }
+    .item .botoes .menos { background: var(--cartao); color: var(--texto); border: 1px solid var(--borda); }
+    .item .botoes .menos:hover { background: var(--hover-suave); }
+
+    .destaque { animation: piscar 0.7s; }
+    @keyframes piscar { 0% { background: var(--ok-fundo); } 100% { background: transparent; } }
+    @media (prefers-reduced-motion: reduce) { .destaque { animation: none; } }
+
+    .vazio { text-align: center; color: var(--texto-suave); padding: 20px 0; }
+
+    .aviso, .sucesso {
       display: none;
-      background: #fef2f2;
-      color: var(--vermelho);
-      border: 1px solid #fecaca;
-      border-radius: 8px;
+      border-radius: 10px;
       padding: 10px 12px;
-      margin-top: 8px;
+      margin-top: 10px;
       font-size: .9rem;
     }
+    .aviso { background: var(--perigo-fundo); color: var(--perigo); border: 1px solid var(--perigo-borda); }
+    .sucesso { background: var(--ok-fundo); color: var(--ok); border: 1px solid var(--borda); }
+
+    /* cadastro */
+    .foto-area { display: flex; gap: 12px; align-items: center; }
+    .foto-previa {
+      width: 92px; height: 92px;
+      border-radius: 12px;
+      object-fit: cover;
+      border: 1px dashed var(--borda);
+      background: var(--hover-suave);
+      color: var(--texto-suave);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: .75rem;
+      text-align: center;
+      flex-shrink: 0;
+    }
+    .foto-botoes { display: flex; flex-direction: column; gap: 8px; }
+    .foto-botoes button { font-size: .9rem; padding: 10px 12px; }
+    .linha-botoes { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+    .linha-botoes button { flex: 1; min-width: 120px; }
+
+    /* resumo */
+    .totais { display: flex; gap: 16px; flex-wrap: wrap; }
+    .totais strong { font-size: 1.5rem; font-variant-numeric: tabular-nums; }
+    .totais .rotulo { display: block; color: var(--texto-suave); font-size: .75rem; text-transform: uppercase; letter-spacing: .04em; }
+    .rolagem { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+    th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--borda); font-size: .9rem; }
+    th { color: var(--texto-suave); font-weight: 600; font-size: .72rem; text-transform: uppercase; letter-spacing: .04em; }
+    td.numero, th.numero { text-align: right; font-variant-numeric: tabular-nums; }
+    .nota { font-size: .82rem; color: var(--texto-suave); margin-top: 8px; line-height: 1.45; }
+
+    .oculto { display: none !important; }
+
+    /* foto ampliada */
+    dialog {
+      border: none;
+      border-radius: 14px;
+      padding: 8px;
+      background: var(--cartao);
+      max-width: min(92vw, 480px);
+    }
+    dialog::backdrop { background: rgba(0, 0, 0, .55); }
+    dialog img { width: 100%; border-radius: 10px; display: block; }
+    dialog .fechar { width: 100%; margin-top: 8px; }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>Contagem de Estoque</h1>
-    <p class="subtitulo">Bipe ou digite o código, informe a quantidade e pressione Enter. Itens repetidos são somados automaticamente.</p>
+    <h1 id="titulo">Contagem de Estoque — Adega</h1>
 
-    <div class="cartao">
-      <form class="linha" id="formulario">
-        <input id="codigo" placeholder="Código / código de barras" autocomplete="off" autofocus required>
-        <input id="descricao" placeholder="Descrição (opcional)" autocomplete="off">
-        <input id="quantidade" type="number" step="any" value="1" placeholder="Qtd" required>
-        <button type="submit">Adicionar</button>
-      </form>
-      <div class="aviso" id="aviso"></div>
-    </div>
-
-    <div class="cartao resumo">
-      <div><span class="rotulo">Itens</span><strong id="totalItens">0</strong></div>
-      <div><span class="rotulo">Unidades</span><strong id="totalUnidades">0</strong></div>
-      <div class="acoes">
-        <button class="secundario" id="btnCsv">Exportar CSV</button>
-        <button class="secundario" id="btnJson">Exportar JSON</button>
-        <button class="perigo" id="btnLimpar">Zerar contagem</button>
+    <!-- ===================== TELA: CONTAR ===================== -->
+    <section class="tela ativa" id="tela-contar">
+      <div class="cartao">
+        <input id="bipe" placeholder="Bipe o código de barras ou busque pelo nome" autocomplete="off" enterkeyhint="done">
+        <div class="chips" id="chips"></div>
+        <div class="aviso" id="avisoContar"></div>
+        <div class="sucesso" id="sucessoContar"></div>
       </div>
-    </div>
+      <div class="cartao">
+        <div id="listaContar"></div>
+        <div class="vazio oculto" id="vazioContar"></div>
+      </div>
+    </section>
 
-    <div class="cartao">
-      <input id="busca" placeholder="Buscar por código ou descrição…" autocomplete="off">
-      <table>
-        <thead>
-          <tr><th>Código</th><th>Descrição</th><th>Qtd</th><th></th></tr>
-        </thead>
-        <tbody id="corpoTabela"></tbody>
-      </table>
-      <div class="vazio" id="mensagemVazio">Nenhum item contado ainda.</div>
-    </div>
+    <!-- ===================== TELA: CADASTRAR ===================== -->
+    <section class="tela" id="tela-cadastrar">
+      <div class="cartao">
+        <h2 id="tituloCadastro">Cadastrar item</h2>
+        <div class="foto-area">
+          <img class="foto-previa oculto" id="fotoPrevia" alt="Foto do item">
+          <div class="foto-previa" id="fotoVazia">sem foto</div>
+          <div class="foto-botoes">
+            <button type="button" class="secundario" id="btnTirarFoto">📷 Tirar foto</button>
+            <button type="button" class="secundario" id="btnGaleria">🖼️ Da galeria</button>
+            <button type="button" class="perigo oculto" id="btnRemoverFoto">Remover foto</button>
+          </div>
+        </div>
+        <input type="file" id="arquivoCamera" accept="image/*" capture="environment" class="oculto">
+        <input type="file" id="arquivoGaleria" accept="image/*" class="oculto">
+
+        <form id="formCadastro">
+          <label for="cadNome">Nome do item *</label>
+          <input id="cadNome" placeholder="Ex.: Cerveja Heineken 330ml" autocomplete="off" required>
+
+          <label for="cadCodigo">Código de barras (opcional)</label>
+          <input id="cadCodigo" placeholder="Bipe ou digite o código" autocomplete="off" inputmode="numeric">
+
+          <label for="cadCategoria">Categoria</label>
+          <select id="cadCategoria"></select>
+
+          <label for="cadQuantidade">Quantidade inicial</label>
+          <input id="cadQuantidade" type="number" step="any" min="0" value="0" inputmode="decimal">
+
+          <div class="linha-botoes">
+            <button type="submit" id="btnSalvarItem">Salvar item</button>
+            <button type="button" class="secundario oculto" id="btnCancelarEdicao">Cancelar</button>
+            <button type="button" class="perigo oculto" id="btnExcluirItem">Excluir item</button>
+          </div>
+        </form>
+        <div class="aviso" id="avisoCadastro"></div>
+        <div class="sucesso" id="sucessoCadastro"></div>
+      </div>
+    </section>
+
+    <!-- ===================== TELA: RESUMO ===================== -->
+    <section class="tela" id="tela-resumo">
+      <div class="cartao">
+        <h2>Totais</h2>
+        <div class="totais">
+          <div><span class="rotulo">Itens</span><strong id="totalItens">0</strong></div>
+          <div><span class="rotulo">Unidades</span><strong id="totalUnidades">0</strong></div>
+        </div>
+        <div class="rolagem">
+          <table>
+            <thead>
+              <tr><th>Categoria</th><th class="numero">Itens</th><th class="numero">Unidades</th></tr>
+            </thead>
+            <tbody id="tabelaCategorias"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="cartao">
+        <h2>Este aparelho</h2>
+        <label for="aparelho">Nome do aparelho ou de quem está contando</label>
+        <input id="aparelho" placeholder="Ex.: Celular 1 — João" autocomplete="off">
+        <p class="nota">Com 5 celulares: cada um conta uma parte da adega. No fim, cada aparelho toca em <strong>Exportar JSON</strong> e envia o arquivo (WhatsApp, e-mail…). No celular principal, use <strong>Juntar contagem</strong> com cada arquivo recebido — as quantidades são somadas automaticamente.</p>
+      </div>
+
+      <div class="cartao">
+        <h2>Exportar e juntar</h2>
+        <div class="linha-botoes" style="margin-top:0">
+          <button class="secundario" id="btnJson">Exportar JSON</button>
+          <button class="secundario" id="btnCsv">Exportar CSV</button>
+          <button id="btnJuntar">Juntar contagem</button>
+        </div>
+        <input type="file" id="arquivoJuntar" accept=".json,application/json,.txt" class="oculto">
+        <p class="nota">O JSON leva o catálogo completo (com fotos) — é ele que você usa para juntar aparelhos e para integrar em outro sistema. O CSV abre no Excel.</p>
+        <div class="aviso" id="avisoResumo"></div>
+        <div class="sucesso" id="sucessoResumo"></div>
+      </div>
+
+      <div class="cartao">
+        <h2>Recomeçar</h2>
+        <div class="linha-botoes" style="margin-top:0">
+          <button class="perigo" id="btnZerar">Zerar quantidades</button>
+          <button class="perigo" id="btnApagarTudo">Apagar tudo</button>
+        </div>
+        <p class="nota">“Zerar quantidades” mantém os itens cadastrados (com fotos) e volta tudo para 0 — ideal para a próxima contagem. “Apagar tudo” remove também o catálogo.</p>
+      </div>
+    </section>
   </div>
+
+  <nav>
+    <button data-tela="tela-contar" class="ativa">Contar</button>
+    <button data-tela="tela-cadastrar">Cadastrar</button>
+    <button data-tela="tela-resumo">Resumo</button>
+  </nav>
+
+  <dialog id="dialogoFoto">
+    <img id="fotoAmpliada" alt="Foto do item">
+    <button class="secundario fechar" id="btnFecharFoto">Fechar</button>
+  </dialog>
 
   <script src="contagem-estoque.js"></script>
   <script>
     'use strict';
 
-    const contagem = new ContagemEstoque({ storage: localStorage });
+    let armazenamento = null;
+    try { armazenamento = window.localStorage; } catch (e) { /* bloqueado: segue em memória */ }
+    const contagem = new ContagemEstoque({ storage: armazenamento });
+    const CATEGORIAS = ContagemEstoque.CATEGORIAS;
 
-    const formulario = document.getElementById('formulario');
-    const campoCodigo = document.getElementById('codigo');
-    const campoDescricao = document.getElementById('descricao');
-    const campoQuantidade = document.getElementById('quantidade');
-    const campoBusca = document.getElementById('busca');
-    const corpoTabela = document.getElementById('corpoTabela');
-    const mensagemVazio = document.getElementById('mensagemVazio');
-    const aviso = document.getElementById('aviso');
+    // ---------- utilidades ----------
+    function $(id) { return document.getElementById(id); }
 
-    function mostrarAviso(mensagem) {
-      aviso.textContent = mensagem;
-      aviso.style.display = mensagem ? 'block' : 'none';
+    function el(tag, atributos, filhos) {
+      const n = document.createElement(tag);
+      Object.keys(atributos || {}).forEach(function (k) {
+        if (k === 'texto') n.textContent = atributos[k];
+        else if (k === 'classe') n.className = atributos[k];
+        else n.setAttribute(k, atributos[k]);
+      });
+      (filhos || []).forEach(function (f) { if (f) n.appendChild(f); });
+      return n;
     }
 
-    function escapar(texto) {
-      const div = document.createElement('div');
-      div.textContent = texto;
-      return div.innerHTML;
-    }
-
-    function renderizar() {
-      const resumo = contagem.resumo();
-      document.getElementById('totalItens').textContent = resumo.itens;
-      document.getElementById('totalUnidades').textContent = resumo.unidades;
-
-      const lista = contagem.itens(campoBusca.value);
-      mensagemVazio.style.display = lista.length ? 'none' : 'block';
-
-      corpoTabela.innerHTML = lista.map(function (item) {
-        return (
-          '<tr data-codigo="' + escapar(item.codigo) + '">' +
-          '<td class="codigo-mono">' + escapar(item.codigo) + '</td>' +
-          '<td>' + (escapar(item.descricao) || '<span class="codigo-mono">—</span>') + '</td>' +
-          '<td class="qtd">' + item.quantidade + '</td>' +
-          '<td class="acoes">' +
-          '<button class="secundario" data-acao="editar" title="Corrigir quantidade">✎</button>' +
-          '<button class="perigo" data-acao="remover" title="Remover item">✕</button>' +
-          '</td></tr>'
-        );
-      }).join('');
-    }
-
-    formulario.addEventListener('submit', function (evento) {
-      evento.preventDefault();
-      mostrarAviso('');
-      try {
-        contagem.registrar(campoCodigo.value, campoDescricao.value, campoQuantidade.value);
-        formulario.reset();
-        campoQuantidade.value = 1;
-        campoCodigo.focus();
-        renderizar();
-      } catch (erro) {
-        mostrarAviso(erro.message);
+    const temporizadores = {};
+    function mensagem(id, texto) {
+      const caixa = $(id);
+      caixa.textContent = texto || '';
+      caixa.style.display = texto ? 'block' : 'none';
+      clearTimeout(temporizadores[id]);
+      if (texto && caixa.classList.contains('sucesso')) {
+        temporizadores[id] = setTimeout(function () { caixa.style.display = 'none'; }, 3500);
       }
-    });
+    }
 
-    corpoTabela.addEventListener('click', function (evento) {
-      const botao = evento.target.closest('button');
-      if (!botao) return;
-      const codigo = botao.closest('tr').dataset.codigo;
-
-      if (botao.dataset.acao === 'remover') {
-        if (confirm('Remover o item ' + codigo + ' da contagem?')) {
-          contagem.remover(codigo);
-          renderizar();
-        }
-      } else if (botao.dataset.acao === 'editar') {
-        const item = contagem.obter(codigo);
-        const resposta = prompt('Nova quantidade para ' + codigo + ':', item.quantidade);
-        if (resposta === null) return;
+    async function salvarArquivo(nome, dados) {
+      if (window.claude && window.claude.downloads) {
         try {
-          contagem.definirQuantidade(codigo, resposta);
-          renderizar();
+          await window.claude.downloads.save({ filename: nome, data: dados });
+          return true;
         } catch (erro) {
-          alert(erro.message);
+          if (erro && erro.code === 'declined') return false;
+          if (erro && erro.code === 'extension_not_enabled') {
+            try {
+              await window.claude.downloads.save({ filename: nome.replace(/\.[^.]+$/, '.txt'), data: dados });
+              return true;
+            } catch (erro2) {
+              if (erro2 && erro2.code === 'declined') return false;
+            }
+          }
+          /* outros erros: tenta o download clássico abaixo */
         }
       }
-    });
-
-    campoBusca.addEventListener('input', renderizar);
-
-    document.getElementById('btnLimpar').addEventListener('click', function () {
-      if (confirm('Zerar toda a contagem? Essa ação não pode ser desfeita.')) {
-        contagem.limpar();
-        renderizar();
-      }
-    });
-
-    function baixarArquivo(nome, conteudo, tipo) {
-      const blob = new Blob([conteudo], { type: tipo + ';charset=utf-8' });
+      const blob = new Blob([dados], { type: 'application/octet-stream' });
       const link = document.createElement('a');
       link.href = URL.createObjectURL(blob);
       link.download = nome;
       link.click();
       URL.revokeObjectURL(link.href);
+      return true;
     }
 
     function carimboData() {
-      return new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-');
+      return new Date().toISOString().slice(0, 16).replace(/[:T]/g, '-');
     }
 
-    document.getElementById('btnCsv').addEventListener('click', function () {
-      baixarArquivo('contagem-' + carimboData() + '.csv', '\uFEFF' + contagem.exportarCSV(), 'text/csv');
+    function nomeArquivo(extensao) {
+      const aparelho = $('aparelho').value.trim().replace(/[^\p{L}\p{N}]+/gu, '-').replace(/^-|-$/g, '');
+      return 'contagem-' + (aparelho ? aparelho + '-' : '') + carimboData() + extensao;
+    }
+
+    function comprimirFoto(arquivo) {
+      return new Promise(function (resolver, rejeitar) {
+        const img = new Image();
+        const url = URL.createObjectURL(arquivo);
+        img.onload = function () {
+          const MAXIMO = 480;
+          const escala = Math.min(1, MAXIMO / Math.max(img.width, img.height));
+          const canvas = document.createElement('canvas');
+          canvas.width = Math.max(1, Math.round(img.width * escala));
+          canvas.height = Math.max(1, Math.round(img.height * escala));
+          canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+          URL.revokeObjectURL(url);
+          resolver(canvas.toDataURL('image/jpeg', 0.6));
+        };
+        img.onerror = function () {
+          URL.revokeObjectURL(url);
+          rejeitar(new Error('Não foi possível ler a foto.'));
+        };
+        img.src = url;
+      });
+    }
+
+    // ---------- navegação por abas ----------
+    document.querySelectorAll('nav button').forEach(function (botao) {
+      botao.addEventListener('click', function () {
+        mostrarTela(botao.dataset.tela);
+      });
     });
 
-    document.getElementById('btnJson').addEventListener('click', function () {
-      baixarArquivo('contagem-' + carimboData() + '.json', contagem.exportarJSON(), 'application/json');
+    function mostrarTela(idTela) {
+      document.querySelectorAll('.tela').forEach(function (t) {
+        t.classList.toggle('ativa', t.id === idTela);
+      });
+      document.querySelectorAll('nav button').forEach(function (b) {
+        b.classList.toggle('ativa', b.dataset.tela === idTela);
+      });
+      if (idTela === 'tela-contar') renderizarContar();
+      if (idTela === 'tela-resumo') renderizarResumo();
+      window.scrollTo(0, 0);
+    }
+
+    // ---------- tela: contar ----------
+    let categoriaAtiva = '';
+    let idDestacado = null;
+
+    const chips = $('chips');
+    ['', ...CATEGORIAS].forEach(function (cat) {
+      const b = el('button', { texto: cat || 'Todas', type: 'button' });
+      if (cat === '') b.classList.add('ativa');
+      b.addEventListener('click', function () {
+        categoriaAtiva = cat;
+        chips.querySelectorAll('button').forEach(function (x) { x.classList.remove('ativa'); });
+        b.classList.add('ativa');
+        renderizarContar();
+      });
+      chips.appendChild(b);
     });
 
-    renderizar();
+    const campoBipe = $('bipe');
+    campoBipe.addEventListener('input', function () {
+      mensagem('avisoContar', '');
+      renderizarContar();
+    });
+    campoBipe.addEventListener('keydown', function (evento) {
+      if (evento.key !== 'Enter') return;
+      evento.preventDefault();
+      biparCodigo(campoBipe.value.trim());
+    });
+
+    function biparCodigo(codigo) {
+      if (!codigo) return;
+      const item = contagem.porCodigo(codigo);
+      if (item) {
+        contagem.contar(item.id, 1);
+        idDestacado = item.id;
+        campoBipe.value = '';
+        mensagem('avisoContar', '');
+        mensagem('sucessoContar', '+1 ' + item.nome + ' (total: ' + contagem.obter(item.id).quantidade + ')');
+        renderizarContar();
+        campoBipe.focus();
+      } else {
+        mensagem('sucessoContar', '');
+        mensagem('avisoContar', 'Código não cadastrado. Toque em "Cadastrar" para criar o item — o código já vai preenchido.');
+        prepararCadastro({ codigo: codigo });
+      }
+    }
+
+    function renderizarContar() {
+      const lista = contagem.itens(campoBipe.value, categoriaAtiva);
+      const caixa = $('listaContar');
+      caixa.innerHTML = '';
+
+      const vazio = $('vazioContar');
+      if (!lista.length) {
+        vazio.textContent = contagem.resumo().itens === 0
+          ? 'Nenhum item cadastrado ainda. Comece pela aba "Cadastrar".'
+          : 'Nada encontrado com esse filtro.';
+        vazio.classList.remove('oculto');
+      } else {
+        vazio.classList.add('oculto');
+      }
+
+      lista.forEach(function (item) {
+        let miniatura;
+        if (item.foto) {
+          miniatura = el('img', { classe: 'miniatura', src: item.foto, alt: item.nome, title: 'Ver foto' });
+          miniatura.addEventListener('click', function () {
+            $('fotoAmpliada').src = item.foto;
+            $('dialogoFoto').showModal();
+          });
+        } else {
+          miniatura = el('div', { classe: 'miniatura', texto: item.nome.charAt(0).toUpperCase(), title: 'Editar item' });
+          miniatura.addEventListener('click', function () { prepararCadastro(item); });
+        }
+
+        const info = el('div', { classe: 'info' }, [
+          el('div', { classe: 'nome', texto: item.nome }),
+          el('div', { classe: 'detalhe', texto: (item.codigo ? item.codigo + ' · ' : '') + item.categoria }),
+        ]);
+        info.addEventListener('click', function () { prepararCadastro(item); });
+        info.style.cursor = 'pointer';
+        info.title = 'Editar item';
+
+        const qtd = el('div', { classe: 'qtd', texto: item.quantidade, title: 'Digitar quantidade' });
+        qtd.addEventListener('click', function () {
+          const resposta = prompt('Quantidade de "' + item.nome + '":', item.quantidade);
+          if (resposta === null) return;
+          try {
+            contagem.definirQuantidade(item.id, String(resposta).replace(',', '.'));
+            renderizarContar();
+          } catch (erro) { alert(erro.message); }
+        });
+
+        const menos = el('button', { classe: 'menos', texto: '−', type: 'button', 'aria-label': 'Tirar 1 de ' + item.nome });
+        menos.addEventListener('click', function () { contagem.contar(item.id, -1); renderizarContar(); });
+        const mais = el('button', { texto: '+', type: 'button', 'aria-label': 'Somar 1 em ' + item.nome });
+        mais.addEventListener('click', function () { contagem.contar(item.id, 1); renderizarContar(); });
+
+        const linha = el('div', { classe: 'item' }, [miniatura, info, qtd, el('div', { classe: 'botoes' }, [menos, mais])]);
+        if (item.id === idDestacado) {
+          linha.classList.add('destaque');
+          idDestacado = null;
+        }
+        caixa.appendChild(linha);
+      });
+    }
+
+    $('btnFecharFoto').addEventListener('click', function () { $('dialogoFoto').close(); });
+
+    // ---------- tela: cadastrar ----------
+    let editandoId = null;
+    let fotoAtual = null;
+
+    const seletorCategoria = $('cadCategoria');
+    CATEGORIAS.forEach(function (c) {
+      seletorCategoria.appendChild(el('option', { value: c, texto: c }));
+    });
+
+    function definirFoto(dataUrl) {
+      fotoAtual = dataUrl || null;
+      $('fotoPrevia').classList.toggle('oculto', !fotoAtual);
+      $('fotoVazia').classList.toggle('oculto', !!fotoAtual);
+      $('btnRemoverFoto').classList.toggle('oculto', !fotoAtual);
+      if (fotoAtual) $('fotoPrevia').src = fotoAtual;
+    }
+
+    function prepararCadastro(item) {
+      mensagem('avisoCadastro', '');
+      mensagem('sucessoCadastro', '');
+      editandoId = item && item.id ? item.id : null;
+      $('tituloCadastro').textContent = editandoId ? 'Editar item' : 'Cadastrar item';
+      $('cadNome').value = (item && item.nome) || '';
+      $('cadCodigo').value = (item && item.codigo) || '';
+      seletorCategoria.value = (item && item.categoria) || CATEGORIAS[0];
+      $('cadQuantidade').value = item && item.quantidade != null ? item.quantidade : 0;
+      $('cadQuantidade').disabled = !!editandoId; // quantidade se ajusta na tela Contar
+      definirFoto(item && item.foto);
+      $('btnSalvarItem').textContent = editandoId ? 'Salvar alterações' : 'Salvar item';
+      $('btnCancelarEdicao').classList.toggle('oculto', !editandoId);
+      $('btnExcluirItem').classList.toggle('oculto', !editandoId);
+      mostrarTela('tela-cadastrar');
+      if (!editandoId && item && item.codigo) $('cadNome').focus();
+    }
+
+    function limparCadastro() {
+      prepararCadastro(null);
+      seletorCategoria.value = CATEGORIAS[0];
+    }
+
+    $('btnTirarFoto').addEventListener('click', function () { $('arquivoCamera').click(); });
+    $('btnGaleria').addEventListener('click', function () { $('arquivoGaleria').click(); });
+    $('btnRemoverFoto').addEventListener('click', function () { definirFoto(null); });
+
+    [$('arquivoCamera'), $('arquivoGaleria')].forEach(function (entrada) {
+      entrada.addEventListener('change', function () {
+        const arquivo = entrada.files && entrada.files[0];
+        entrada.value = '';
+        if (!arquivo) return;
+        comprimirFoto(arquivo).then(definirFoto).catch(function (erro) {
+          mensagem('avisoCadastro', erro.message);
+        });
+      });
+    });
+
+    $('formCadastro').addEventListener('submit', function (evento) {
+      evento.preventDefault();
+      mensagem('avisoCadastro', '');
+      try {
+        const campos = {
+          nome: $('cadNome').value,
+          codigo: $('cadCodigo').value,
+          categoria: seletorCategoria.value,
+          foto: fotoAtual,
+        };
+        if (editandoId) {
+          contagem.atualizar(editandoId, campos);
+          limparCadastro();
+          mensagem('sucessoCadastro', 'Item atualizado.');
+        } else {
+          campos.quantidade = String($('cadQuantidade').value).replace(',', '.');
+          const item = contagem.cadastrar(campos);
+          limparCadastro();
+          mensagem('sucessoCadastro', '"' + item.nome + '" cadastrado.');
+        }
+      } catch (erro) {
+        mensagem('avisoCadastro', erro.message);
+      }
+    });
+
+    $('btnCancelarEdicao').addEventListener('click', limparCadastro);
+
+    $('btnExcluirItem').addEventListener('click', function () {
+      if (!editandoId) return;
+      const item = contagem.obter(editandoId);
+      if (confirm('Excluir "' + (item ? item.nome : '') + '" do catálogo?')) {
+        contagem.remover(editandoId);
+        limparCadastro();
+        mostrarTela('tela-contar');
+      }
+    });
+
+    // ---------- tela: resumo ----------
+    const campoAparelho = $('aparelho');
+    try {
+      campoAparelho.value = (armazenamento && armazenamento.getItem('contagem-aparelho')) || '';
+    } catch (e) { /* sem storage */ }
+    campoAparelho.addEventListener('input', function () {
+      try { armazenamento && armazenamento.setItem('contagem-aparelho', campoAparelho.value); } catch (e) { /* sem storage */ }
+    });
+
+    function renderizarResumo() {
+      const resumo = contagem.resumo();
+      $('totalItens').textContent = resumo.itens;
+      $('totalUnidades').textContent = resumo.unidades;
+      const corpo = $('tabelaCategorias');
+      corpo.innerHTML = '';
+      CATEGORIAS.forEach(function (c) {
+        const t = resumo.porCategoria[c];
+        corpo.appendChild(el('tr', {}, [
+          el('td', { texto: c }),
+          el('td', { classe: 'numero', texto: t.itens }),
+          el('td', { classe: 'numero', texto: t.unidades }),
+        ]));
+      });
+    }
+
+    $('btnJson').addEventListener('click', function () {
+      mensagem('avisoResumo', '');
+      salvarArquivo(nomeArquivo('.json'), contagem.exportarJSON(campoAparelho.value))
+        .then(function (salvou) {
+          if (salvou) mensagem('sucessoResumo', 'JSON exportado. Envie o arquivo para o celular principal.');
+        });
+    });
+
+    $('btnCsv').addEventListener('click', function () {
+      mensagem('avisoResumo', '');
+      salvarArquivo(nomeArquivo('.csv'), '\uFEFF' + contagem.exportarCSV())
+        .then(function (salvou) {
+          if (salvou) mensagem('sucessoResumo', 'CSV exportado.');
+        });
+    });
+
+    $('btnJuntar').addEventListener('click', function () { $('arquivoJuntar').click(); });
+    $('arquivoJuntar').addEventListener('change', function () {
+      const arquivo = this.files && this.files[0];
+      this.value = '';
+      if (!arquivo) return;
+      mensagem('avisoResumo', '');
+      arquivo.text().then(function (texto) {
+        const resultado = contagem.importarJSON(texto);
+        renderizarResumo();
+        mensagem('sucessoResumo',
+          'Contagem juntada: ' + resultado.somados + ' item(ns) somado(s), ' +
+          resultado.novos + ' novo(s).');
+      }).catch(function () {
+        mensagem('avisoResumo', 'Arquivo inválido. Use um JSON exportado por este sistema.');
+      });
+    });
+
+    $('btnZerar').addEventListener('click', function () {
+      if (confirm('Zerar as quantidades de todos os itens? O catálogo (nomes, fotos) é mantido.')) {
+        contagem.zerarQuantidades();
+        renderizarResumo();
+        mensagem('sucessoResumo', 'Quantidades zeradas.');
+      }
+    });
+
+    $('btnApagarTudo').addEventListener('click', function () {
+      if (confirm('Apagar TODOS os itens e quantidades? Essa ação não pode ser desfeita.')) {
+        contagem.limpar();
+        renderizarResumo();
+        mensagem('sucessoResumo', 'Tudo apagado.');
+      }
+    });
+
+    // ---------- início ----------
+    limparCadastro();
+    mostrarTela('tela-contar');
   </script>
 </body>
 </html>
