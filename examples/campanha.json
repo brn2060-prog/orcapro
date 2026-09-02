@@ -12,11 +12,79 @@
     "endAt": "2026-12-01T02:59:59.000Z"
   },
   "targeting": {
-    "countries": ["BR"],
-    "ageMin": 25,
-    "ageMax": 55,
-    "genders": ["all"],
-    "interests": ["reforma residencial", "construção civil", "orçamento de obra"]
+    "countries": ["BR"]
   },
-  "platforms": ["meta", "google", "tiktok"]
+  "platforms": ["meta", "google", "tiktok"],
+
+  "adSets": [
+    {
+      "name": "Proprietários 30-55",
+      "status": "paused",
+      "targeting": {
+        "countries": ["BR"],
+        "ageMin": 30,
+        "ageMax": 55,
+        "genders": ["all"],
+        "interests": ["reforma residencial", "construção civil"]
+      },
+      "ads": [
+        {
+          "name": "Orçamento em 24h — imagem",
+          "status": "paused",
+          "creative": {
+            "format": "single_image",
+            "headlines": [
+              "Orçamento de obra em 24h",
+              "Reforma sem surpresa no preço",
+              "Peça seu orçamento grátis"
+            ],
+            "descriptions": [
+              "Compare propostas de profissionais verificados.",
+              "Sem taxa e sem compromisso."
+            ],
+            "primaryText": "Vai reformar? Receba até 3 orçamentos detalhados em 24 horas.",
+            "landingPageUrl": "https://orcapro.com.br/orcamento",
+            "callToAction": "get_quote",
+            "imageUrl": "https://orcapro.com.br/midia/banner-blackfriday.jpg"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Jovens 18-29",
+      "status": "paused",
+      "budget": {
+        "mode": "daily",
+        "amountMinor": 5000,
+        "currency": "BRL"
+      },
+      "targeting": {
+        "countries": ["BR"],
+        "ageMin": 18,
+        "ageMax": 29
+      },
+      "ads": [
+        {
+          "name": "Primeiro apê — imagem",
+          "status": "paused",
+          "creative": {
+            "format": "single_image",
+            "headlines": [
+              "Primeiro apê sem estourar",
+              "Quanto custa reformar?",
+              "Descubra em 2 minutos"
+            ],
+            "descriptions": [
+              "Orçamento detalhado, direto no WhatsApp.",
+              "Profissionais avaliados por quem já contratou."
+            ],
+            "primaryText": "Saiu do aluguel? Veja quanto custa deixar o apê do seu jeito.",
+            "landingPageUrl": "https://orcapro.com.br/primeiro-ape",
+            "callToAction": "learn_more",
+            "imageUrl": "https://orcapro.com.br/midia/primeiro-ape.jpg"
+          }
+        }
+      ]
+    }
+  ]
 }

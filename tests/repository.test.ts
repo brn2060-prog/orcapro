@@ -82,6 +82,6 @@ describe('JsonFileCampaignRepository', () => {
     const { writeFile } = await import('node:fs/promises');
     await writeFile(file, '{"nao":"e um array"}', 'utf8');
 
-    await assert.rejects(() => new JsonFileCampaignRepository(file).list(), /array de campanhas/);
+    await assert.rejects(() => new JsonFileCampaignRepository(file).list(), /deveria conter um array/);
   });
 });

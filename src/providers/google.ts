@@ -1,8 +1,16 @@
 import type { GoogleConfig } from '../config.js';
+import type { Ad } from '../domain/ad.js';
+import type { AdSet } from '../domain/adSet.js';
 import type { Campaign, CampaignStatus, Objective } from '../domain/campaign.js';
 import { ProviderError } from '../domain/errors.js';
 import { requestJson } from './http.js';
-import type { AdProvider, PublishResult, RemoteStatus } from './types.js';
+import type {
+  AdContext,
+  AdProvider,
+  AdSetContext,
+  PublishResult,
+  RemoteStatus,
+} from './types.js';
 
 /**
  * O Google Ads não tem "objetivo" no mesmo sentido que Meta/TikTok — o que
@@ -24,6 +32,20 @@ const STATUS_MAP: Record<CampaignStatus, string> = {
   paused: 'PAUSED',
   archived: 'REMOVED',
 };
+
+/** O tipo do grupo de anúncios acompanha o canal da campanha. */
+const AD_GROUP_TYPE_MAP: Record<string, string> = {
+  SEARCH: 'SEARCH_STANDARD',
+  DISPLAY: 'DISPLAY_STANDARD',
+  VIDEO: 'VIDEO_RESPONSIVE',
+  MULTI_CHANNEL: 'SEARCH_STANDARD',
+};
+
+/** Mínimos que o Google exige num anúncio de pesquisa responsivo. */
+const RSA_MIN_HEADLINES = 3;
+const RSA_MIN_DESCRIPTIONS = 2;
+const RSA_MAX_HEADLINES = 15;
+const RSA_MAX_DESCRIPTIONS = 4;
 
 interface MutateResponse {
   results?: Array<{ resourceName?: string }>;
@@ -159,23 +181,7 @@ export class GoogleAdsProvider implements AdProvider {
   }
 
   async setStatus(externalId: string, status: CampaignStatus): Promise<void> {
-    await requestJson(
-      this.platform,
-      `${this.baseUrl}/customers/${this.customerId}/campaigns:mutate`,
-      {
-        method: 'POST',
-        headers: this.authHeaders,
-        body: {
-          operations: [
-            {
-              update: { resourceName: externalId, status: STATUS_MAP[status] },
-              updateMask: 'status',
-            },
-          ],
-        },
-        timeoutMs: this.timeoutMs,
-      },
-    );
+    await this.mutateStatus('campaigns', externalId, status);
   }
 
   async fetchStatus(externalId: string): Promise<RemoteStatus> {
@@ -202,5 +208,135 @@ export class GoogleAdsProvider implements AdProvider {
       },
     );
     return { externalStatus: response.results?.[0]?.campaign?.status ?? 'UNKNOWN' };
+  }
+
+  // --- grupo de anúncios ---
+
+  async publishAdSet(adSet: AdSet, context: AdSetContext): Promise<PublishResult> {
+    const channel = CHANNEL_MAP[context.campaign.objective];
+
+    const create: Record<string, unknown> = {
+      name: adSet.name,
+      campaign: context.campaignExternalId,
+      status: STATUS_MAP[adSet.status],
+      type: AD_GROUP_TYPE_MAP[channel] ?? 'SEARCH_STANDARD',
+    };
+
+    if (adSet.bidAmountMinor) {
+      create.cpcBidMicros = String(minorUnitsToMicros(adSet.bidAmountMinor));
+    }
+
+    const response = await requestJson<MutateResponse>(
+      this.platform,
+      `${this.baseUrl}/customers/${this.customerId}/adGroups:mutate`,
+      {
+        method: 'POST',
+        headers: this.authHeaders,
+        body: { operations: [{ create }] },
+        timeoutMs: this.timeoutMs,
+      },
+    );
+
+    const resourceName = response.results?.[0]?.resourceName;
+    if (!resourceName) {
+      throw new ProviderError(this.platform, 'o Google Ads não criou o grupo de anúncios', response);
+    }
+
+    return { externalId: resourceName, externalStatus: STATUS_MAP[adSet.status] };
+  }
+
+  async setAdSetStatus(externalId: string, status: CampaignStatus): Promise<void> {
+    await this.mutateStatus('adGroups', externalId, status);
+  }
+
+  // --- anúncio ---
+
+  async publishAd(ad: Ad, context: AdContext): Promise<PublishResult> {
+    const { headlines, descriptions, landingPageUrl } = ad.creative;
+
+    // O Google recusa a criação abaixo desses mínimos; falhar aqui dá uma
+    // mensagem útil em vez de um erro cru da API.
+    if (headlines.length < RSA_MIN_HEADLINES) {
+      throw new ProviderError(
+        this.platform,
+        `o Google Ads exige ao menos ${RSA_MIN_HEADLINES} títulos no anúncio responsivo; este tem ${headlines.length}`,
+      );
+    }
+    if (descriptions.length < RSA_MIN_DESCRIPTIONS) {
+      throw new ProviderError(
+        this.platform,
+        `o Google Ads exige ao menos ${RSA_MIN_DESCRIPTIONS} descrições no anúncio responsivo; este tem ${descriptions.length}`,
+      );
+    }
+
+    const response = await requestJson<MutateResponse>(
+      this.platform,
+      `${this.baseUrl}/customers/${this.customerId}/adGroupAds:mutate`,
+      {
+        method: 'POST',
+        headers: this.authHeaders,
+        body: {
+          operations: [
+            {
+              create: {
+                adGroup: context.adSetExternalId,
+                status: STATUS_MAP[ad.status],
+                ad: {
+                  name: ad.name,
+                  finalUrls: [landingPageUrl],
+                  // O Google monta o anúncio a partir do texto; a mídia do
+                  // criativo não se aplica ao formato responsivo de pesquisa.
+                  responsiveSearchAd: {
+                    headlines: headlines
+                      .slice(0, RSA_MAX_HEADLINES)
+                      .map((text) => ({ text })),
+                    descriptions: descriptions
+                      .slice(0, RSA_MAX_DESCRIPTIONS)
+                      .map((text) => ({ text })),
+                  },
+                },
+              },
+            },
+          ],
+        },
+        timeoutMs: this.timeoutMs,
+      },
+    );
+
+    const resourceName = response.results?.[0]?.resourceName;
+    if (!resourceName) {
+      throw new ProviderError(this.platform, 'o Google Ads não criou o anúncio', response);
+    }
+
+    return { externalId: resourceName, externalStatus: STATUS_MAP[ad.status] };
+  }
+
+  async setAdStatus(externalId: string, status: CampaignStatus): Promise<void> {
+    await this.mutateStatus('adGroupAds', externalId, status);
+  }
+
+  /** Todos os recursos do Google Ads mudam de status pelo mesmo formato de mutate. */
+  private async mutateStatus(
+    resource: 'campaigns' | 'adGroups' | 'adGroupAds',
+    externalId: string,
+    status: CampaignStatus,
+  ): Promise<void> {
+    await requestJson(
+      this.platform,
+      `${this.baseUrl}/customers/${this.customerId}/${resource}:mutate`,
+      {
+        method: 'POST',
+        headers: this.authHeaders,
+        body: {
+          operations: [
+            {
+              update: { resourceName: externalId, status: STATUS_MAP[status] },
+              updateMask: 'status',
+            },
+          ],
+        },
+        timeoutMs: this.timeoutMs,
+      },
+    );
   }
 }

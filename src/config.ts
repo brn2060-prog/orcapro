@@ -10,6 +10,10 @@ export interface MetaConfig {
   accessToken: string;
   adAccountId: string;
   apiVersion: string;
+  /** Página do Facebook dona dos anúncios. Exigida para criar criativos. */
+  pageId: string;
+  /** Conta do Instagram, quando os anúncios também rodam lá. */
+  instagramActorId: string;
 }
 
 export interface GoogleConfig {
@@ -24,13 +28,17 @@ export interface TikTokConfig {
   accessToken: string;
   advertiserId: string;
   apiVersion: string;
+  /** Identidade que assina os anúncios (perfil TikTok ou identidade própria). */
+  identityId: string;
+  identityType: string;
 }
 
 export interface Config {
   port: number;
   host: string;
   logLevel: string;
-  dataFile: string;
+  /** Diretório onde ficam campaigns.json, adsets.json e ads.json. */
+  dataDir: string;
   /** Força simulação mesmo com credenciais presentes. */
   dryRun: boolean;
   httpTimeoutMs: number;
@@ -64,13 +72,15 @@ export function loadConfig(): Config {
     port: int('PORT', 3000),
     host: str('HOST', '0.0.0.0'),
     logLevel: str('LOG_LEVEL', 'info'),
-    dataFile: str('ORCAPRO_DATA_FILE', 'data/campaigns.json'),
+    dataDir: str('ORCAPRO_DATA_DIR', 'data'),
     dryRun: bool('ORCAPRO_DRY_RUN', false),
     httpTimeoutMs: int('ORCAPRO_HTTP_TIMEOUT_MS', 15_000),
     meta: {
       accessToken: str('META_ACCESS_TOKEN'),
       adAccountId: str('META_AD_ACCOUNT_ID'),
       apiVersion: str('META_API_VERSION', 'v21.0'),
+      pageId: str('META_PAGE_ID'),
+      instagramActorId: str('META_INSTAGRAM_ACTOR_ID'),
     },
     google: {
       accessToken: str('GOOGLE_ADS_ACCESS_TOKEN'),
@@ -83,6 +93,8 @@ export function loadConfig(): Config {
       accessToken: str('TIKTOK_ACCESS_TOKEN'),
       advertiserId: str('TIKTOK_ADVERTISER_ID'),
       apiVersion: str('TIKTOK_API_VERSION', 'v1.3'),
+      identityId: str('TIKTOK_IDENTITY_ID'),
+      identityType: str('TIKTOK_IDENTITY_TYPE', 'CUSTOMIZED_USER'),
     },
   };
 }

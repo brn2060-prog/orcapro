@@ -4,23 +4,15 @@ import { ConflictError, NotFoundError, ValidationError } from '../src/domain/err
 import { findPublication } from '../src/domain/campaign.js';
 import { InMemoryCampaignRepository } from '../src/repository/campaignRepository.js';
 import { CampaignService } from '../src/services/campaignService.js';
-import { campaignInput, fakeRegistry, type FakeProvider } from './helpers.js';
+import { buildServices, campaignInput, fakeRegistry, type FakeProvider } from './helpers.js';
 import type { Platform } from '../src/domain/campaign.js';
 
 function buildService(options: {
   providers?: ReturnType<typeof fakeRegistry>;
   dryRun?: boolean;
 } = {}) {
-  const providers = options.providers ?? fakeRegistry();
-  let seq = 0;
-  const service = new CampaignService({
-    repository: new InMemoryCampaignRepository(),
-    providers,
-    dryRun: options.dryRun ?? false,
-    newId: () => `id-${(seq += 1)}-0000-0000-0000`,
-    now: () => new Date('2026-01-01T12:00:00.000Z'),
-  });
-  return { service, providers };
+  const { campaigns, providers } = buildServices(options);
+  return { service: campaigns, providers };
 }
 
 describe('CampaignService.create', () => {

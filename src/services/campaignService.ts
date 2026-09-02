@@ -1,10 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import type {
-  Campaign,
-  CampaignStatus,
-  Platform,
-  Publication,
-} from '../domain/campaign.js';
+import type { Campaign, CampaignStatus, Platform } from '../domain/campaign.js';
 import { findPublication } from '../domain/campaign.js';
 import { ConflictError, NotFoundError, ValidationError } from '../domain/errors.js';
 import {
@@ -15,13 +10,9 @@ import {
 } from '../domain/schemas.js';
 import type { ProviderRegistry } from '../providers/registry.js';
 import type { CampaignRepository } from '../repository/campaignRepository.js';
+import { runPublish, runStatusChange, type PublishOutcome } from './publishing.js';
 
-export interface PublishOutcome {
-  platform: Platform;
-  outcome: 'published' | 'simulated' | 'skipped' | 'failed';
-  externalId?: string;
-  error?: string;
-}
+export type { PublishOutcome } from './publishing.js';
 
 export interface PublishReport {
   campaign: Campaign;
@@ -196,52 +187,15 @@ export class CampaignService {
   /** Publica em uma plataforma e grava o resultado em `campaign.publications`. */
   private async publishTo(campaign: Campaign, platform: Platform): Promise<PublishOutcome> {
     const provider = this.providers[platform];
-    const simulate = this.dryRun || !provider.isConfigured();
-    const attemptedAt = this.timestamp();
-
-    if (simulate) {
-      const externalId = `dryrun-${platform}-${this.newId().slice(0, 8)}`;
-      this.recordPublication(campaign, {
-        platform,
-        state: 'published',
-        externalId,
-        externalStatus: 'SIMULATED',
-        publishedAt: attemptedAt,
-        lastAttemptAt: attemptedAt,
-        dryRun: true,
-      });
-      return { platform, outcome: 'simulated', externalId };
-    }
-
-    try {
-      const result = await provider.publish(campaign);
-      this.recordPublication(campaign, {
-        platform,
-        state: 'published',
-        externalId: result.externalId,
-        externalStatus: result.externalStatus,
-        publishedAt: attemptedAt,
-        lastAttemptAt: attemptedAt,
-        dryRun: false,
-      });
-      return { platform, outcome: 'published', externalId: result.externalId };
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      this.recordPublication(campaign, {
-        platform,
-        state: 'failed',
-        lastAttemptAt: attemptedAt,
-        error: message,
-        dryRun: false,
-      });
-      return { platform, outcome: 'failed', error: message };
-    }
-  }
-
-  private recordPublication(campaign: Campaign, publication: Publication): void {
-    const index = campaign.publications.findIndex((p) => p.platform === publication.platform);
-    if (index >= 0) campaign.publications[index] = publication;
-    else campaign.publications.push(publication);
+    return runPublish({
+      platform,
+      provider,
+      dryRun: this.dryRun,
+      target: campaign,
+      timestamp: this.timestamp(),
+      newId: this.newId,
+      publish: () => provider.publish(campaign),
+    });
   }
 
   /**
@@ -256,34 +210,13 @@ export class CampaignService {
     const results: PublishOutcome[] = [];
 
     for (const publication of campaign.publications) {
-      if (publication.state !== 'published' || !publication.externalId) {
-        results.push({ platform: publication.platform, outcome: 'skipped' });
-        continue;
-      }
-
-      if (publication.dryRun) {
-        publication.externalStatus = 'SIMULATED';
-        results.push({
-          platform: publication.platform,
-          outcome: 'simulated',
-          externalId: publication.externalId,
-        });
-        continue;
-      }
-
-      try {
-        await this.providers[publication.platform].setStatus(publication.externalId, status);
-        publication.error = undefined;
-        results.push({
-          platform: publication.platform,
-          outcome: 'published',
-          externalId: publication.externalId,
-        });
-      } catch (error) {
-        const message = error instanceof Error ? error.message : String(error);
-        publication.error = message;
-        results.push({ platform: publication.platform, outcome: 'failed', error: message });
-      }
+      results.push(
+        await runStatusChange({
+          publication,
+          apply: (externalId) =>
+            this.providers[publication.platform].setStatus(externalId, status),
+        }),
+      );
     }
 
     campaign.updatedAt = this.timestamp();

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { AD_FORMATS, CALL_TO_ACTIONS } from './ad.js';
 import {
   BUDGET_MODES,
   CAMPAIGN_STATUSES,
@@ -90,17 +91,18 @@ function checkCrossFieldRules(
   }
 }
 
-export const createCampaignSchema = z
-  .object({
-    name: z.string().min(1, 'informe o nome da campanha').max(255),
-    objective: z.enum(OBJECTIVES),
-    status: z.enum(CAMPAIGN_STATUSES).default('draft'),
-    budget: budgetSchema,
-    schedule: scheduleSchema,
-    targeting: targetingSchema,
-    platforms: platformsSchema,
-  })
-  .superRefine(checkCrossFieldRules);
+/** Campos da campanha sem as regras cruzadas, para poder ser estendido. */
+const campaignObject = z.object({
+  name: z.string().min(1, 'informe o nome da campanha').max(255),
+  objective: z.enum(OBJECTIVES),
+  status: z.enum(CAMPAIGN_STATUSES).default('draft'),
+  budget: budgetSchema,
+  schedule: scheduleSchema,
+  targeting: targetingSchema,
+  platforms: platformsSchema,
+});
+
+export const createCampaignSchema = campaignObject.superRefine(checkCrossFieldRules);
 
 export type CreateCampaignInput = z.infer<typeof createCampaignSchema>;
 
@@ -144,6 +146,113 @@ export const listQuerySchema = z.object({
   status: z.enum(CAMPAIGN_STATUSES).optional(),
   platform: z.enum(PLATFORMS).optional(),
 });
+
+// --- conjuntos de anúncios ---
+
+const adSetObject = z.object({
+  name: z.string().min(1, 'informe o nome do conjunto').max(255),
+  status: z.enum(CAMPAIGN_STATUSES).default('draft'),
+  /** Omitido = herda o orçamento da campanha (CBO na Meta). */
+  budget: budgetSchema.optional(),
+  /** Omitida = herda a janela da campanha. */
+  schedule: scheduleSchema.optional(),
+  targeting: targetingSchema,
+  bidAmountMinor: z.number().int().positive().optional(),
+});
+
+export const createAdSetSchema = adSetObject.superRefine(checkCrossFieldRules);
+
+export type CreateAdSetInput = z.infer<typeof createAdSetSchema>;
+
+export const updateAdSetSchema = z
+  .object({
+    name: z.string().min(1).max(255).optional(),
+    budget: budgetSchema.optional(),
+    schedule: scheduleSchema.optional(),
+    targeting: targetingSchema.optional(),
+    bidAmountMinor: z.number().int().positive().optional(),
+  })
+  .refine((value) => Object.keys(value).length > 0, {
+    message: 'informe ao menos um campo para atualizar',
+  });
+
+export type UpdateAdSetInput = z.infer<typeof updateAdSetSchema>;
+
+// --- anúncios ---
+
+const creativeSchema = z
+  .object({
+    format: z.enum(AD_FORMATS),
+    headlines: z
+      .array(z.string().min(1).max(120))
+      .min(1, 'informe ao menos um título')
+      .max(15, 'no máximo 15 títulos'),
+    descriptions: z
+      .array(z.string().min(1).max(240))
+      .min(1, 'informe ao menos uma descrição')
+      .max(4, 'no máximo 4 descrições'),
+    primaryText: z.string().min(1).max(2000).optional(),
+    landingPageUrl: z
+      .string()
+      .refine((value) => /^https?:\/\//.test(value), { message: 'use uma URL http(s)' }),
+    callToAction: z.enum(CALL_TO_ACTIONS),
+    imageUrl: z
+      .string()
+      .refine((value) => /^https?:\/\//.test(value), { message: 'use uma URL http(s)' })
+      .optional(),
+    videoIds: z.partialRecord(z.enum(PLATFORMS), z.string().min(1)).optional(),
+  })
+  .superRefine((value, ctx) => {
+    if (value.format === 'single_image' && !value.imageUrl) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['imageUrl'],
+        message: 'formato single_image exige imageUrl',
+      });
+    }
+    if (value.format === 'single_video' && !value.videoIds) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['videoIds'],
+        message: 'formato single_video exige videoIds com o ID do vídeo em cada plataforma',
+      });
+    }
+  });
+
+export const createAdSchema = z.object({
+  name: z.string().min(1, 'informe o nome do anúncio').max(255),
+  status: z.enum(CAMPAIGN_STATUSES).default('draft'),
+  creative: creativeSchema,
+});
+
+export type CreateAdInput = z.infer<typeof createAdSchema>;
+
+export const updateAdSchema = z
+  .object({
+    name: z.string().min(1).max(255).optional(),
+    creative: creativeSchema.optional(),
+  })
+  .refine((value) => Object.keys(value).length > 0, {
+    message: 'informe ao menos um campo para atualizar',
+  });
+
+export type UpdateAdInput = z.infer<typeof updateAdSchema>;
+
+// --- árvore completa em um arquivo ---
+
+/**
+ * O que o CLI aceita em `publicar`: a campanha com seus conjuntos e anúncios
+ * aninhados, para subir tudo de uma vez.
+ */
+export const campaignFileSchema = campaignObject
+  .extend({
+    adSets: z
+      .array(adSetObject.extend({ ads: z.array(createAdSchema).optional() }))
+      .optional(),
+  })
+  .superRefine(checkCrossFieldRules);
+
+export type CampaignFileInput = z.infer<typeof campaignFileSchema>;
 
 /** Converte um ZodError em um payload de erro estável para a API. */
 export function formatZodIssues(error: z.ZodError): Array<{ path: string; message: string }> {

@@ -9,28 +9,30 @@
  */
 import { readFile } from 'node:fs/promises';
 import { loadConfig, loadDotEnv } from './config.js';
+import { buildContainer, type Container } from './container.js';
 import type { Platform } from './domain/campaign.js';
 import { PLATFORMS } from './domain/campaign.js';
 import { AppError } from './domain/errors.js';
-import { createCampaignSchema, formatZodIssues } from './domain/schemas.js';
+import { campaignFileSchema, formatZodIssues } from './domain/schemas.js';
 import { buildProviderRegistry, describeProviders } from './providers/registry.js';
-import { JsonFileCampaignRepository } from './repository/campaignRepository.js';
-import { CampaignService } from './services/campaignService.js';
+import { flattenOutcomes, type DeployReport } from './services/deployService.js';
+import type { PublishOutcome } from './services/publishing.js';
 
 const USAGE = `
 orcapro — campanhas de anúncios
 
   publicar <arquivo.json> [--plataformas meta,google,tiktok]
-      Cria a campanha descrita no arquivo e publica nas plataformas.
+      Sobe a campanha do arquivo — com seus conjuntos e anúncios, se houver —
+      e publica tudo na ordem certa.
 
   listar
-      Lista as campanhas salvas.
+      Lista as campanhas salvas com seus conjuntos e anúncios.
 
   status <id> <ativar|pausar|arquivar>
-      Muda o status e propaga para as plataformas publicadas.
+      Muda o status da campanha e propaga para as plataformas publicadas.
 
   sincronizar <id>
-      Relê o status de cada plataforma.
+      Relê o status da campanha em cada plataforma.
 
   provedores
       Mostra quais plataformas estão configuradas.
@@ -55,17 +57,54 @@ function parsePlatformsFlag(args: string[]): Platform[] | undefined {
   return list as Platform[];
 }
 
-function buildService(): { service: CampaignService; dryRun: boolean } {
+function buildCli(): Container {
   loadDotEnv();
-  const config = loadConfig();
-  return {
-    service: new CampaignService({
-      repository: new JsonFileCampaignRepository(config.dataFile),
-      providers: buildProviderRegistry(config),
-      dryRun: config.dryRun,
-    }),
-    dryRun: config.dryRun,
-  };
+  return buildContainer(loadConfig());
+}
+
+const SYMBOL: Record<PublishOutcome['outcome'], string> = {
+  published: '✓',
+  simulated: '~',
+  skipped: '·',
+  blocked: '!',
+  failed: '✗',
+};
+
+function describeOutcome(result: PublishOutcome): string {
+  switch (result.outcome) {
+    case 'published':
+      return `${result.platform}: publicado (${result.externalId})`;
+    case 'simulated':
+      return `${result.platform}: simulado (${result.externalId}) — nada foi enviado`;
+    case 'skipped':
+      return `${result.platform}: já publicado, pulado`;
+    case 'blocked':
+      return `${result.platform}: bloqueado — ${result.error}`;
+    case 'failed':
+      return `${result.platform}: ${result.error}`;
+  }
+}
+
+function printOutcomes(results: PublishOutcome[], indent: string): void {
+  for (const result of results) {
+    const line = `${indent}${SYMBOL[result.outcome]} ${describeOutcome(result)}`;
+    if (result.outcome === 'failed' || result.outcome === 'blocked') console.error(line);
+    else console.log(line);
+  }
+}
+
+function printDeploy(report: DeployReport): void {
+  console.log('  campanha');
+  printOutcomes(report.campaign, '    ');
+
+  for (const adSet of report.adSets) {
+    console.log(`  conjunto "${adSet.name}"`);
+    printOutcomes(adSet.results, '    ');
+    for (const ad of adSet.ads) {
+      console.log(`    anúncio "${ad.name}"`);
+      printOutcomes(ad.results, '      ');
+    }
+  }
 }
 
 async function cmdPublicar(args: string[]): Promise<number> {
@@ -73,7 +112,7 @@ async function cmdPublicar(args: string[]): Promise<number> {
   if (!file) throw new Error('informe o arquivo JSON da campanha');
 
   const raw = await readFile(file, 'utf8');
-  const parsed = createCampaignSchema.safeParse(JSON.parse(raw));
+  const parsed = campaignFileSchema.safeParse(JSON.parse(raw));
   if (!parsed.success) {
     console.error(`${file} não passou na validação:`);
     for (const issue of formatZodIssues(parsed.error)) {
@@ -83,50 +122,53 @@ async function cmdPublicar(args: string[]): Promise<number> {
   }
 
   const platforms = parsePlatformsFlag(args);
-  const { service } = buildService();
+  const cli = buildCli();
+  const { adSets: adSetInputs, ...campaignInput } = parsed.data;
 
-  const campaign = await service.create(parsed.data);
+  const campaign = await cli.campaigns.create(campaignInput);
   console.log(`campanha criada: ${campaign.id} — "${campaign.name}"`);
 
-  const report = await service.publish(campaign.id, platforms);
-
-  let failures = 0;
-  for (const result of report.results) {
-    switch (result.outcome) {
-      case 'published':
-        console.log(`  ✓ ${result.platform}: publicada (${result.externalId})`);
-        break;
-      case 'simulated':
-        console.log(`  ~ ${result.platform}: simulada (${result.externalId}) — nada foi enviado`);
-        break;
-      case 'skipped':
-        console.log(`  · ${result.platform}: já publicada, pulada`);
-        break;
-      case 'failed':
-        failures += 1;
-        console.error(`  ✗ ${result.platform}: ${result.error}`);
-        break;
+  for (const { ads: adInputs, ...adSetInput } of adSetInputs ?? []) {
+    const adSet = await cli.adSets.create(campaign.id, adSetInput);
+    console.log(`  conjunto criado: ${adSet.id} — "${adSet.name}"`);
+    for (const adInput of adInputs ?? []) {
+      const ad = await cli.ads.create(adSet.id, adInput);
+      console.log(`    anúncio criado: ${ad.id} — "${ad.name}"`);
     }
   }
 
-  return failures > 0 ? 1 : 0;
+  console.log('\npublicando:');
+  const report = await cli.deploys.deploy(campaign.id, platforms);
+  printDeploy(report);
+
+  const problems = flattenOutcomes(report).filter(
+    (r) => r.outcome === 'failed' || r.outcome === 'blocked',
+  );
+  return problems.length > 0 ? 1 : 0;
 }
 
 async function cmdListar(): Promise<number> {
-  const { service } = buildService();
-  const campaigns = await service.list();
+  const cli = buildCli();
+  const campaigns = await cli.campaigns.list();
 
   if (campaigns.length === 0) {
     console.log('nenhuma campanha salva.');
     return 0;
   }
 
+  const summarize = (publications: { platform: string; state: string; dryRun: boolean }[]): string =>
+    publications.map((p) => `${p.platform}:${p.state}${p.dryRun ? '(dry-run)' : ''}`).join(' ');
+
   for (const campaign of campaigns) {
-    const publications = campaign.publications
-      .map((p) => `${p.platform}:${p.state}${p.dryRun ? '(dry-run)' : ''}`)
-      .join(' ');
     console.log(`${campaign.id}  ${campaign.status.padEnd(8)}  ${campaign.name}`);
-    console.log(`  ${publications}`);
+    console.log(`  ${summarize(campaign.publications)}`);
+
+    for (const adSet of await cli.adSets.listByCampaign(campaign.id)) {
+      console.log(`  └ conjunto "${adSet.name}"  ${summarize(adSet.publications)}`);
+      for (const ad of await cli.ads.listByAdSet(adSet.id)) {
+        console.log(`      └ anúncio "${ad.name}"  ${summarize(ad.publications)}`);
+      }
+    }
   }
   return 0;
 }
@@ -147,28 +189,20 @@ async function cmdStatus(args: string[]): Promise<number> {
   const status = STATUS_ALIASES[action.toLowerCase()];
   if (!status) throw new Error(`ação desconhecida: ${action}`);
 
-  const { service } = buildService();
-  const report = await service.setStatus(id, status);
+  const cli = buildCli();
+  const report = await cli.campaigns.setStatus(id, status);
   console.log(`campanha ${id} agora está "${report.campaign.status}"`);
+  printOutcomes(report.results, '  ');
 
-  let failures = 0;
-  for (const result of report.results) {
-    if (result.outcome === 'failed') {
-      failures += 1;
-      console.error(`  ✗ ${result.platform}: ${result.error}`);
-    } else {
-      console.log(`  · ${result.platform}: ${result.outcome}`);
-    }
-  }
-  return failures > 0 ? 1 : 0;
+  return report.results.some((r) => r.outcome === 'failed') ? 1 : 0;
 }
 
 async function cmdSincronizar(args: string[]): Promise<number> {
   const id = args[0];
   if (!id) throw new Error('uso: sincronizar <id>');
 
-  const { service } = buildService();
-  const campaign = await service.sync(id);
+  const cli = buildCli();
+  const campaign = await cli.campaigns.sync(id);
   for (const publication of campaign.publications) {
     console.log(
       `  ${publication.platform}: ${publication.externalStatus ?? '—'}` +

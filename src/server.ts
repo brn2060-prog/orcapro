@@ -1,21 +1,20 @@
 import Fastify, { type FastifyInstance } from 'fastify';
 import type { Config } from './config.js';
-import { buildProviderRegistry } from './providers/registry.js';
-import { JsonFileCampaignRepository } from './repository/campaignRepository.js';
-import { registerCampaignRoutes } from './routes/campaigns.js';
-import { CampaignService } from './services/campaignService.js';
+import { buildContainer } from './container.js';
+import { registerRoutes } from './routes/index.js';
 
 export async function buildServer(config: Config): Promise<FastifyInstance> {
   const app = Fastify({ logger: { level: config.logLevel } });
+  const container = buildContainer(config);
 
-  const providers = buildProviderRegistry(config);
-  const service = new CampaignService({
-    repository: new JsonFileCampaignRepository(config.dataFile),
-    providers,
-    dryRun: config.dryRun,
+  await registerRoutes(app, {
+    campaigns: container.campaigns,
+    adSets: container.adSets,
+    ads: container.ads,
+    deploys: container.deploys,
+    providers: container.providers,
+    dryRun: container.dryRun,
   });
-
-  await registerCampaignRoutes(app, { service, providers, dryRun: config.dryRun });
 
   return app;
 }

@@ -34,6 +34,8 @@ describe('MetaAdsProvider', () => {
     accessToken: 'token',
     adAccountId: '123456',
     apiVersion: 'v21.0',
+    pageId: '5550001',
+    instagramActorId: '',
   };
 
   it('só se considera configurado com token e conta', () => {
@@ -186,7 +188,13 @@ describe('GoogleAdsProvider', () => {
 });
 
 describe('TikTokAdsProvider', () => {
-  const config = { accessToken: 'token', advertiserId: 'adv-1', apiVersion: 'v1.3' };
+  const config = {
+    accessToken: 'token',
+    advertiserId: 'adv-1',
+    apiVersion: 'v1.3',
+    identityId: 'ident-1',
+    identityType: 'CUSTOMIZED_USER',
+  };
 
   it('envia o orçamento na unidade principal da moeda', async () => {
     const stub = stubFetch(() => jsonResponse({ code: 0, data: { campaign_id: 'tt-1' } }));
