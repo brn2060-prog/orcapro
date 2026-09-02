@@ -1,0 +1,22 @@
+{
+  "name": "Black Friday 2026 — Orçamentos",
+  "objective": "leads",
+  "status": "paused",
+  "budget": {
+    "mode": "daily",
+    "amountMinor": 15000,
+    "currency": "BRL"
+  },
+  "schedule": {
+    "startAt": "2026-11-20T03:00:00.000Z",
+    "endAt": "2026-12-01T02:59:59.000Z"
+  },
+  "targeting": {
+    "countries": ["BR"],
+    "ageMin": 25,
+    "ageMax": 55,
+    "genders": ["all"],
+    "interests": ["reforma residencial", "construção civil", "orçamento de obra"]
+  },
+  "platforms": ["meta", "google", "tiktok"]
+}
