@@ -1,0 +1,7 @@
+geopandas==0.14.4
+shapely
+pyproj
+matplotlib
+numpy
+pillow
+anthropic

@@ -1,0 +1,489 @@
+{
+  "slug": "01-vikings-arctic-winter",
+  "title": "How Did Vikings Survive Arctic Winters?",
+  "alt_titles": [
+    "Why Viking Winters Were Deadlier Than Viking Raids",
+    "What Vikings Actually Did for 6 Months of Darkness"
+  ],
+  "hooks": [
+    "In northern Norway, the sun sets in late November and does not rise again for seven weeks. The Vikings lived there anyway.",
+    "Every Viking farm made the same calculation each autumn: count the hay, then decide which animals would not see spring.",
+    "The Vikings are famous for crossing oceans. Their real enemy never carried a sword. It arrived every year, and it stayed for six months."
+  ],
+  "style": {
+    "visual": "painterly digital illustration, warm lamplight against cold blue, textured brushwork, muted earth tones, cinematic 16:9, no text, no watermark",
+    "guide_character": "a small weathered Norse traveler in a grey wool cloak with a walking staff, seen from behind or in silhouette, never showing a detailed face",
+    "voice": "calm male documentary narrator, unhurried, warm, American English"
+  },
+  "sources": [
+    "Byock, Jesse. Viking Age Iceland (Penguin, 2001)",
+    "Ohthere's voyage, in the Old English Orosius (c. 890), ed. Bately & Englert (2007)",
+    "Arneborg, J. et al. 'Norse Greenland dietary economy ca. AD 980 - ca. AD 1450', Journal of the North Atlantic (2012)",
+    "Seaver, Kirsten. The Frozen Echo: Greenland and the Exploration of North America (Stanford, 1996)",
+    "National Museum of Denmark: 'The Viking Age - housing, food and clothing' (natmus.dk)",
+    "Ostergaard, Else. Woven into the Earth: Textiles from Norse Greenland (Aarhus, 2004)",
+    "Norwegian Meteorological Institute: polar night dates for Tromso"
+  ],
+  "description": "How did Viking families survive winters with months of darkness, no chimneys, and no way to buy food? This episode follows a Norse farm from the autumn hay count to the midwinter feast, from Norway to Iceland and Greenland, with animated maps showing where the Norse pushed into the cold and why one colony vanished.\n\nSources in pinned comment and below.",
+  "tags": [
+    "vikings",
+    "viking age",
+    "norse history",
+    "medieval history",
+    "how people lived",
+    "history documentary",
+    "iceland history",
+    "greenland norse",
+    "survival history",
+    "winter"
+  ],
+  "scenes": [
+    {
+      "id": 1,
+      "type": "illustration",
+      "narration": "In the far north of Norway, around the year 890, a farmer named Ohthere sat in the hall of an English king and described his home. He said he lived farther north than any other Norseman. His wealth was not gold. It was reindeer, walrus hides, and the ability to get through winter.",
+      "on_screen": "Northern Norway, c. 890",
+      "images": [
+        "a Norse farmer in a wool cloak speaking before a seated Anglo-Saxon king in a timber hall lit by torches, 9th century, {style}",
+        "a lone Norse farmstead on a dark fjord in deep snow at dusk, a single warm light in the doorway, reindeer in the distance, {style}"
+      ]
+    },
+    {
+      "id": 2,
+      "type": "map",
+      "narration": "Because here is the thing about the Viking world. It sat on the edge of the habitable planet. Norway, then Iceland from the eight seventies, then Greenland from about nine eighty-five. Every step west was a step into longer, darker, hungrier winters.",
+      "on_screen": "The Norse North",
+      "map": {
+        "kind": "route",
+        "crs": "+proj=lcc +lat_1=50 +lat_2=75 +lon_0=-15 +lat_0=60",
+        "extent": [
+          -58,
+          28,
+          50,
+          76
+        ],
+        "highlight": [
+          "Norway",
+          "Iceland",
+          "Greenland"
+        ],
+        "title": "West, into the cold",
+        "points": [
+          [
+            6,
+            61.5
+          ],
+          [
+            -7,
+            62
+          ],
+          [
+            -19,
+            64.5
+          ],
+          [
+            -45.5,
+            61
+          ]
+        ],
+        "stops": [
+          [
+            6,
+            61.5,
+            "Norway"
+          ],
+          [
+            -19,
+            64.5,
+            "Iceland, c. 870"
+          ],
+          [
+            -45.5,
+            61,
+            "Greenland, c. 985"
+          ]
+        ]
+      }
+    },
+    {
+      "id": 3,
+      "type": "map",
+      "narration": "In Tromso, in Ohthere's part of Norway, the sun drops below the horizon in late November and does not come back until mid January. Roughly seven weeks without a sunrise. Farther south, in the Viking heartlands, the sun did rise, but for only five or six hours a day. So the first problem was not cold. It was darkness.",
+      "on_screen": "Polar night",
+      "map": {
+        "kind": "counter",
+        "crs": "+proj=lcc +lat_1=50 +lat_2=75 +lon_0=-15 +lat_0=60",
+        "extent": [
+          -5,
+          40,
+          56,
+          74
+        ],
+        "highlight": [
+          "Norway"
+        ],
+        "title": "Tromso, northern Norway",
+        "to": 50,
+        "label": "days without a sunrise"
+      }
+    },
+    {
+      "id": 4,
+      "type": "guide",
+      "narration": "So let's walk through a Norse winter the way a farm family lived it. Not a raid. Not a saga. Just the question that mattered most: how do we still be alive in April?",
+      "on_screen": "",
+      "images": [
+        "{guide} standing at the edge of a snow covered Norse farm at twilight, looking toward a longhouse with smoke rising, {style}"
+      ]
+    },
+    {
+      "id": 5,
+      "type": "illustration",
+      "narration": "It started in August, with hay. Norse farms in the north could not grow much grain. The economy ran on animals: cattle, sheep, goats, a few pigs and horses. And every one of those animals had to be fed indoors for five to seven months. There was only one food that worked: dried grass.",
+      "on_screen": "August: the hay harvest",
+      "images": [
+        "Norse men and women cutting hay with scythes on a steep green meadow above a fjord in late summer, drying racks in the background, {style}",
+        "a Norse farm with tall stacks of hay beside a turf roofed longhouse, cattle grazing nearby, golden evening light, {style}"
+      ]
+    },
+    {
+      "id": 6,
+      "type": "illustration",
+      "narration": "That turned autumn into arithmetic. A farmer counted the hay in the barn and then counted the animals. If the hay could feed twenty cows through to spring, and he had thirty, ten of them were slaughtered in October. Not because he wanted meat. Because a cow that starves in March is worth nothing, and a cow killed in October is six months of food.",
+      "on_screen": "Hay decides who lives",
+      "images": [
+        "a Norse farmer inside a dim barn running his hands over stacked hay, counting, a wife watching from the doorway, {style}",
+        "an autumn slaughter at a Norse farm, carcasses hung from a wooden frame, people working with knives, grey sky, {style}"
+      ]
+    },
+    {
+      "id": 7,
+      "type": "compare",
+      "narration": "Archaeologists see this in the bones. On many Icelandic farms, cattle were killed young, and the herd that survived winter was small. Sheep were hardier and could sometimes graze through snow, which is why Iceland slowly shifted from cattle to sheep. The animals that made it to spring were the ones a family could afford to keep.",
+      "on_screen": "",
+      "map": {
+        "kind": "compare",
+        "crs": "+proj=lcc +lat_1=50 +lat_2=75 +lon_0=-15 +lat_0=60",
+        "extent": [
+          -30,
+          5,
+          60,
+          70
+        ],
+        "highlight": [
+          "Iceland"
+        ],
+        "title": "Months animals spent indoors, Iceland",
+        "items": [
+          [
+            "Cattle",
+            7
+          ],
+          [
+            "Sheep",
+            4
+          ],
+          [
+            "Horses",
+            2
+          ]
+        ],
+        "unit": " mo"
+      }
+    },
+    {
+      "id": 8,
+      "type": "illustration",
+      "narration": "Now, the meat. The Norse had almost no salt in the north. Salt had to be boiled out of seawater or imported, and both were expensive. So they used what the climate gave them for free: cold, wind, and sour milk.",
+      "on_screen": "Preserving without salt",
+      "images": [
+        "rows of split cod hanging on tall wooden racks on a windy rocky shore, mountains behind, Lofoten Norway, winter light, {style}"
+      ]
+    },
+    {
+      "id": 9,
+      "type": "illustration",
+      "narration": "Cod caught in Lofoten in late winter was split, hung on wooden racks, and left in the freezing wind for months. No salt, no smoke. The result was stockfish: hard as wood, light enough to carry, and good for years. By the twelfth century it was Norway's great export, and it had started as a way to not starve.",
+      "on_screen": "Stockfish",
+      "images": [
+        "close view of dried stockfish being stacked by a Norse fisherman inside a dark storehouse, lamplight, {style}",
+        "a Norse trading ship loaded with bundles of dried fish leaving a northern harbor, {style}"
+      ]
+    },
+    {
+      "id": 10,
+      "type": "illustration",
+      "narration": "In Iceland they went further. Whey, the sour liquid left from making skyr, was kept in barrels, and meat, sausages, and even whale fat were dropped in to pickle. The acid stopped the rot. Visitors still describe the taste as a shock. The Norse described it as February.",
+      "on_screen": "Sour whey pickling",
+      "images": [
+        "a Norse woman lowering meat into a large wooden barrel of whey in a dim turf house, steam, other barrels along the wall, {style}"
+      ]
+    },
+    {
+      "id": 11,
+      "type": "illustration",
+      "narration": "Add smoked lamb hung in the roof above the hearth, dried seal and whale meat on the coast, butter packed in barrels, and in a good year, a little grain for porridge and bread. That was the winter larder. It was built in September and it had to last until the first grass.",
+      "on_screen": "The winter larder",
+      "images": [
+        "a Norse storehouse interior packed with hanging smoked meat, barrels, dried fish, and butter tubs, cold light through the door, {style}"
+      ]
+    },
+    {
+      "id": 12,
+      "type": "guide",
+      "narration": "Food solved, at least on paper. Now the house. And this is where the famous image of the Viking hall gets the details wrong.",
+      "on_screen": "",
+      "images": [
+        "{guide} approaching a long low turf walled longhouse half buried in snow, smoke seeping through the roof, {style}"
+      ]
+    },
+    {
+      "id": 13,
+      "type": "illustration",
+      "narration": "A Viking longhouse had no chimney. None. There was a long open hearth down the middle of the floor, and the smoke drifted up and found its way out through a hole in the roof or through the thatch. The upper half of the room was permanently hazy. People sat low, on benches along the walls, under the smoke.",
+      "on_screen": "No chimney",
+      "images": [
+        "interior of a Viking longhouse with a long central fire pit, smoke hanging under the rafters, people sitting on low wall benches, warm orange light, {style}",
+        "view along the length of a dim Norse hall, firelight on carved posts, smoke drifting toward a roof opening, {style}"
+      ]
+    },
+    {
+      "id": 14,
+      "type": "illustration",
+      "narration": "The walls were the real technology. In Norway, timber. In Iceland and Greenland, where trees were scarce, walls were built of cut turf and stone, sometimes two meters thick. Turf is a terrible building material and a brilliant insulator. The house was dark, damp, and smoky. It was also warm, and warm was the whole point.",
+      "on_screen": "Turf walls, up to 2 m thick",
+      "images": [
+        "men stacking thick blocks of cut turf into a wall around a timber frame, Iceland, wide treeless landscape, {style}"
+      ]
+    },
+    {
+      "id": 15,
+      "type": "illustration",
+      "narration": "And then the heaters. The animals. On northern farms the cow byre was built onto the end of the house, or under the same roof. Twenty cattle give off a surprising amount of heat. The family slept at one end, the herd at the other, and the smell was simply the price of not freezing.",
+      "on_screen": "Cattle as central heating",
+      "images": [
+        "cattle standing in a dark stone byre attached to a Norse longhouse, steam rising from their backs, a child feeding them hay by lamplight, {style}"
+      ]
+    },
+    {
+      "id": 16,
+      "type": "illustration",
+      "narration": "Fuel was its own crisis. Norway had forests. Iceland had them too, when the settlers arrived, and within a few generations they were gone, cut for timber, fuel, and charcoal. After that the Icelanders burned peat, dried dung, and driftwood that had floated across from Siberia.",
+      "on_screen": "When the trees ran out",
+      "images": [
+        "an Icelandic family gathering driftwood logs from a black sand beach in winter, grey sea, {style}",
+        "stacked blocks of peat drying beside a turf house, a woman carrying a basket of dried dung, {style}"
+      ]
+    },
+    {
+      "id": 17,
+      "type": "map",
+      "narration": "Clothing was wool, and wool was everything. In Iceland, homespun cloth called vadmal was so central that it worked as money. Debts, fines, and land were priced in lengths of it. Every woman on the farm spent the dark months spinning and weaving, and a farm's survival was measured in cloth as much as in hay.",
+      "on_screen": "Wool as currency",
+      "map": {
+        "kind": "territory",
+        "crs": "+proj=lcc +lat_1=50 +lat_2=75 +lon_0=-15 +lat_0=60",
+        "extent": [
+          -27,
+          -10,
+          62,
+          68
+        ],
+        "highlight": [
+          "Iceland"
+        ],
+        "title": "Iceland: a cloth economy",
+        "label_dy": 0.35,
+        "items": [
+          [
+            -21.2,
+            64.26,
+            "Thingvellir",
+            "the Althing, from 930",
+            "below"
+          ],
+          [
+            -18.1,
+            65.7,
+            "Eyjafjordur",
+            "northern farms"
+          ],
+          [
+            -21.3,
+            64.66,
+            "Reykholt",
+            "Snorri Sturluson's farm, c. 1200"
+          ]
+        ]
+      }
+    },
+    {
+      "id": 18,
+      "type": "illustration",
+      "narration": "Garments found in Norse Greenland show layered wool tunics, hoods with long tails, and mittens and socks made by a looping technique older than knitting. Over that, sheepskin and sealskin. Shoes were simple hide, and in deep snow people strapped on skis, or skates carved from horse and cattle bone.",
+      "on_screen": "",
+      "images": [
+        "a Norse woman at an upright warp weighted loom in a dim longhouse, wool threads lit by a small oil lamp, {style}",
+        "a Norse man on long wooden skis crossing a snowy slope at dawn with a bow on his back, {style}"
+      ]
+    },
+    {
+      "id": 19,
+      "type": "illustration",
+      "narration": "Light came from the animals too. Shallow stone lamps burned fish oil, seal oil, or tallow. One lamp gave about as much light as a candle. In a hall sixty feet long, that is almost nothing. So winter work was done close to the fire, by feel as much as by sight.",
+      "on_screen": "One lamp, one candle's worth of light",
+      "images": [
+        "a soapstone oil lamp burning on a bench beside a Norse woman mending a net, deep shadows all around, {style}"
+      ]
+    },
+    {
+      "id": 20,
+      "type": "guide",
+      "narration": "So what did people actually do for five months in a dark, smoky room? More than you'd think.",
+      "on_screen": "",
+      "images": [
+        "{guide} seated among others on a low bench in a Viking hall, listening to a storyteller by the fire, {style}"
+      ]
+    },
+    {
+      "id": 21,
+      "type": "illustration",
+      "narration": "Winter was the season of making. Tools were repaired. Rope was twisted from hair and bark. Nets were mended. Men carved bowls, bone combs, and ship parts. Women spun, wove, and sewed, every single day, because a farm that stopped making cloth went into debt.",
+      "on_screen": "The season of making",
+      "images": [
+        "a Norse craftsman carving a wooden bowl by firelight, tools and half finished combs on the bench beside him, {style}"
+      ]
+    },
+    {
+      "id": 22,
+      "type": "illustration",
+      "narration": "And winter was the season of stories. The sagas of Iceland were told out loud for generations before anyone wrote them down. There were board games, like hnefatafl. There was ale, if the grain had stretched that far. And at the darkest point of the year there was Jol, the midwinter feast that gave English its word Yule.",
+      "on_screen": "Jol: the midwinter feast",
+      "images": [
+        "a crowded Viking hall at midwinter feast, long tables, roasted meat, drinking horns, firelight and laughter, snow visible through the open door, {style}",
+        "two Norse men playing hnefatafl on a carved wooden board with glass pieces, lamplight, {style}"
+      ]
+    },
+    {
+      "id": 23,
+      "type": "illustration",
+      "narration": "The feast was not just a party. It was a calculated spend. By midwinter the family knew whether the hay and the larder would last. If they would, you killed an animal, brewed what grain you could spare, and gave everyone a reason to believe in March.",
+      "on_screen": "",
+      "images": [
+        "a Norse chieftain raising a drinking horn before a hall of seated guests, a great fire blazing, {style}"
+      ]
+    },
+    {
+      "id": 24,
+      "type": "map",
+      "narration": "Now push this system to its limit. Greenland. Around nine eighty-five, Erik the Red led settlers to two fjord systems on the southwest coast. The Eastern Settlement near today's Qaqortoq, and the Western Settlement near Nuuk. At its height, perhaps two to three thousand people lived there, farming cattle and sheep at the edge of the ice.",
+      "on_screen": "Norse Greenland",
+      "map": {
+        "kind": "territory",
+        "crs": "+proj=lcc +lat_1=50 +lat_2=75 +lon_0=-15 +lat_0=60",
+        "extent": [
+          -58,
+          -38,
+          58,
+          68
+        ],
+        "highlight": [
+          "Greenland"
+        ],
+        "title": "Norse Greenland, c. 985 to c. 1450",
+        "label_dy": 0.45,
+        "items": [
+          [
+            -46.0,
+            60.7,
+            "Eastern Settlement",
+            "c. 985, the larger colony"
+          ],
+          [
+            -51.7,
+            64.2,
+            "Western Settlement",
+            "c. 985, abandoned by c. 1360"
+          ]
+        ]
+      }
+    },
+    {
+      "id": 25,
+      "type": "illustration",
+      "narration": "Greenland winters broke the Norwegian model. Hay was thin. Trees did not exist. So the Greenlanders adapted harder than anyone. Chemical analysis of their bones shows their diet shifting over four centuries, from mostly farm food to mostly seal. By the end, around eighty percent of what they ate came from the sea.",
+      "on_screen": "From cattle to seal",
+      "images": [
+        "Norse hunters in a small boat harpooning seals among drifting ice floes in a Greenland fjord, pale winter sun, {style}"
+      ]
+    },
+    {
+      "id": 26,
+      "type": "compare",
+      "narration": "That is not a small change. It means a people who thought of themselves as farmers became, in practice, marine hunters, while still keeping a few cows as a mark of who they were. It worked for more than four hundred years.",
+      "on_screen": "",
+      "map": {
+        "kind": "compare",
+        "crs": "+proj=lcc +lat_1=50 +lat_2=75 +lon_0=-15 +lat_0=60",
+        "extent": [
+          -58,
+          -38,
+          58,
+          68
+        ],
+        "highlight": [
+          "Greenland"
+        ],
+        "title": "Share of diet from the sea, Norse Greenland",
+        "items": [
+          [
+            "c. 1000",
+            20
+          ],
+          [
+            "c. 1400",
+            80
+          ]
+        ],
+        "unit": "%"
+      }
+    },
+    {
+      "id": 27,
+      "type": "illustration",
+      "narration": "And then it stopped working. From the thirteen hundreds the climate cooled, sea ice closed the shipping lanes to Norway for longer each year, and the hay years got worse. The Western Settlement was empty by the mid thirteen hundreds. The Eastern Settlement went silent sometime in the fourteen hundreds. Nobody recorded the end.",
+      "on_screen": "The colony goes quiet",
+      "images": [
+        "an abandoned Norse stone church and collapsed turf farms in a Greenland valley under heavy snow, no people, grey light, {style}",
+        "a lone ship turning away from a fjord choked with sea ice, Greenland, {style}"
+      ]
+    },
+    {
+      "id": 28,
+      "type": "guide",
+      "narration": "Which brings us back to Ohthere, sitting in that English hall, explaining his reindeer to a king. He was not describing a hard life. He was describing a solved problem.",
+      "on_screen": "",
+      "images": [
+        "{guide} standing on a headland at the first sunrise after the polar night, pale gold light on snow and sea, {style}"
+      ]
+    },
+    {
+      "id": 29,
+      "type": "illustration",
+      "narration": "The Norse survived Arctic winters the same way every year. Count the hay. Kill what you cannot feed. Dry the fish in the wind, sour the meat in whey. Build the walls thick, keep the cattle close, keep the fire low and long. Spin, weave, mend, and tell stories until the sun comes back. It was not heroic. It was a system. And a system is what gets you to April.",
+      "on_screen": "A system, not a miracle",
+      "images": [
+        "a Norse family stepping out of a longhouse into bright spring sunlight, melting snow, green shoots, cattle being led out to pasture, {style}"
+      ]
+    },
+    {
+      "id": 30,
+      "type": "guide",
+      "narration": "Next time on Survival Atlas: what did the people of ancient Egypt do in the years the Nile did not flood? If you want that one, subscribe, and tell me in the comments which winter you would rather face: a Norse one, or a Mongol one on the steppe.",
+      "on_screen": "Next: When the Nile failed",
+      "images": [
+        "{guide} walking away along a desert riverbank at sunset, the Nile and distant pyramids ahead, {style}"
+      ]
+    }
+  ]
+}

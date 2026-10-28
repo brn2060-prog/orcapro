@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+.env
+episodes/*/out/clips/
+episodes/*/audio/*.mp3
+episodes/*/images/*.png
+episodes/*/maps/*.mp4
+episodes/*/out/*.mp4

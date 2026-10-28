@@ -1,0 +1,242 @@
+[
+  {
+    "id": 1,
+    "type": "illustration",
+    "start": 0.0,
+    "duration": 23.31,
+    "on_screen": "Northern Norway, c. 890",
+    "has_audio": false
+  },
+  {
+    "id": 2,
+    "type": "map",
+    "start": 23.31,
+    "duration": 18.6,
+    "on_screen": "The Norse North",
+    "has_audio": false
+  },
+  {
+    "id": 3,
+    "type": "map",
+    "start": 41.91,
+    "duration": 25.89,
+    "on_screen": "Polar night",
+    "has_audio": false
+  },
+  {
+    "id": 4,
+    "type": "guide",
+    "start": 67.8,
+    "duration": 15.17,
+    "on_screen": "",
+    "has_audio": false
+  },
+  {
+    "id": 5,
+    "type": "illustration",
+    "start": 82.97,
+    "duration": 23.74,
+    "on_screen": "August: the hay harvest",
+    "has_audio": false
+  },
+  {
+    "id": 6,
+    "type": "illustration",
+    "start": 106.71,
+    "duration": 28.46,
+    "on_screen": "Hay decides who lives",
+    "has_audio": false
+  },
+  {
+    "id": 7,
+    "type": "compare",
+    "start": 135.17,
+    "duration": 25.03,
+    "on_screen": "",
+    "has_audio": false
+  },
+  {
+    "id": 8,
+    "type": "illustration",
+    "start": 160.2,
+    "duration": 18.17,
+    "on_screen": "Preserving without salt",
+    "has_audio": false
+  },
+  {
+    "id": 9,
+    "type": "illustration",
+    "start": 178.37,
+    "duration": 25.89,
+    "on_screen": "Stockfish",
+    "has_audio": false
+  },
+  {
+    "id": 10,
+    "type": "illustration",
+    "start": 204.26,
+    "duration": 21.17,
+    "on_screen": "Sour whey pickling",
+    "has_audio": false
+  },
+  {
+    "id": 11,
+    "type": "illustration",
+    "start": 225.43,
+    "duration": 23.31,
+    "on_screen": "The winter larder",
+    "has_audio": false
+  },
+  {
+    "id": 12,
+    "type": "guide",
+    "start": 248.74,
+    "duration": 10.89,
+    "on_screen": "",
+    "has_audio": false
+  },
+  {
+    "id": 13,
+    "type": "illustration",
+    "start": 259.63,
+    "duration": 25.89,
+    "on_screen": "No chimney",
+    "has_audio": false
+  },
+  {
+    "id": 14,
+    "type": "illustration",
+    "start": 285.52,
+    "duration": 24.6,
+    "on_screen": "Turf walls, up to 2 m thick",
+    "has_audio": false
+  },
+  {
+    "id": 15,
+    "type": "illustration",
+    "start": 310.12,
+    "duration": 24.17,
+    "on_screen": "Cattle as central heating",
+    "has_audio": false
+  },
+  {
+    "id": 16,
+    "type": "illustration",
+    "start": 334.29,
+    "duration": 20.31,
+    "on_screen": "When the trees ran out",
+    "has_audio": false
+  },
+  {
+    "id": 17,
+    "type": "map",
+    "start": 354.6,
+    "duration": 24.6,
+    "on_screen": "Wool as currency",
+    "has_audio": false
+  },
+  {
+    "id": 18,
+    "type": "illustration",
+    "start": 379.2,
+    "duration": 22.03,
+    "on_screen": "",
+    "has_audio": false
+  },
+  {
+    "id": 19,
+    "type": "illustration",
+    "start": 401.23,
+    "duration": 22.89,
+    "on_screen": "One lamp, one candle's worth of light",
+    "has_audio": false
+  },
+  {
+    "id": 20,
+    "type": "guide",
+    "start": 424.12,
+    "duration": 8.31,
+    "on_screen": "",
+    "has_audio": false
+  },
+  {
+    "id": 21,
+    "type": "illustration",
+    "start": 432.43,
+    "duration": 19.89,
+    "on_screen": "The season of making",
+    "has_audio": false
+  },
+  {
+    "id": 22,
+    "type": "illustration",
+    "start": 452.32,
+    "duration": 25.46,
+    "on_screen": "Jol: the midwinter feast",
+    "has_audio": false
+  },
+  {
+    "id": 23,
+    "type": "illustration",
+    "start": 477.78,
+    "duration": 20.74,
+    "on_screen": "",
+    "has_audio": false
+  },
+  {
+    "id": 24,
+    "type": "map",
+    "start": 498.52,
+    "duration": 25.03,
+    "on_screen": "Norse Greenland",
+    "has_audio": false
+  },
+  {
+    "id": 25,
+    "type": "illustration",
+    "start": 523.55,
+    "duration": 23.31,
+    "on_screen": "From cattle to seal",
+    "has_audio": false
+  },
+  {
+    "id": 26,
+    "type": "compare",
+    "start": 546.86,
+    "duration": 18.6,
+    "on_screen": "",
+    "has_audio": false
+  },
+  {
+    "id": 27,
+    "type": "illustration",
+    "start": 565.46,
+    "duration": 23.74,
+    "on_screen": "The colony goes quiet",
+    "has_audio": false
+  },
+  {
+    "id": 28,
+    "type": "guide",
+    "start": 589.2,
+    "duration": 13.46,
+    "on_screen": "",
+    "has_audio": false
+  },
+  {
+    "id": 29,
+    "type": "illustration",
+    "start": 602.66,
+    "duration": 31.03,
+    "on_screen": "A system, not a miracle",
+    "has_audio": false
+  },
+  {
+    "id": 30,
+    "type": "guide",
+    "start": 633.69,
+    "duration": 21.6,
+    "on_screen": "Next: When the Nile failed",
+    "has_audio": false
+  }
+]
