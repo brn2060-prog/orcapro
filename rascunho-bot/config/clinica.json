@@ -1,0 +1,50 @@
+{
+  "nome": "Consultório Dr. Pablo Rodrigo",
+  "dentista": "Dr. Pablo Rodrigo",
+  "slogan": "A odontologia que você confia",
+  "endereco": "Rua Exemplo, 123 – Bairro, Cidade/UF",
+  "linkMapa": "",
+  "site": "https://drpablorodrigo-site.vercel.app/",
+  "instagram": "@drpablorodrigo",
+  "formasPagamento": "Pix, cartão de débito e crédito (consulte parcelamento)",
+  "convenios": "Atendimento particular. Consulte sobre reembolso de convênio.",
+  "fusoHorario": "-03:00",
+
+  "horarioAtendimento": {
+    "seg": [["07:00", "12:00"], ["13:00", "20:00"]],
+    "ter": [["07:00", "12:00"], ["13:00", "20:00"]],
+    "qua": [["07:00", "12:00"], ["13:00", "20:00"]],
+    "qui": [["07:00", "12:00"], ["13:00", "20:00"]],
+    "sex": [["07:00", "12:00"], ["13:00", "20:00"]],
+    "sab": [],
+    "dom": []
+  },
+  "intervaloEntreHorariosMin": 30,
+  "antecedenciaMinimaHoras": 2,
+  "agendaAbertaDias": 60,
+  "feriados": ["2026-12-25", "2027-01-01"],
+
+  "procedimentos": [
+    { "nome": "Avaliação", "duracaoMin": 30, "descricao": "Consulta inicial com exame clínico completo e plano de tratamento.", "preco": "" },
+    { "nome": "Limpeza (profilaxia)", "duracaoMin": 60, "descricao": "Remoção de tártaro e placa, polimento e orientações de higiene.", "preco": "" },
+    { "nome": "Restauração", "duracaoMin": 60, "descricao": "Tratamento de cárie ou reparo de dente quebrado.", "preco": "" },
+    { "nome": "Clareamento", "duracaoMin": 60, "descricao": "Clareamento dental de consultório ou caseiro supervisionado.", "preco": "" },
+    { "nome": "Tratamento de canal", "duracaoMin": 90, "descricao": "Endodontia para tratar a polpa do dente e eliminar a dor.", "preco": "" },
+    { "nome": "Extração", "duracaoMin": 60, "descricao": "Remoção de dente, incluindo sisos (após avaliação).", "preco": "" },
+    { "nome": "Urgência / dor", "duracaoMin": 30, "descricao": "Atendimento para dor, inchaço ou dente quebrado.", "preco": "" },
+    { "nome": "Retorno", "duracaoMin": 30, "descricao": "Consulta de acompanhamento de um tratamento em andamento.", "preco": "" }
+  ],
+
+  "lembretes": {
+    "ativo": true,
+    "horasAntes": 24,
+    "templateMeta": "lembrete_consulta",
+    "idiomaTemplate": "pt_BR"
+  },
+
+  "orientacoesExtras": [
+    "Implantes, ortodontia (aparelho), lentes de contato dental e próteses começam sempre por uma Avaliação.",
+    "Valores de tratamento são passados pelo Dr. Pablo após a avaliação; não informe preços que não estejam nesta configuração.",
+    "Em caso de sangramento intenso, trauma no rosto, febre com inchaço ou dificuldade para respirar/engolir, oriente procurar um pronto-socorro imediatamente e encaminhe para a equipe."
+  ]
+}

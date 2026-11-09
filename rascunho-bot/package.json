@@ -1,0 +1,20 @@
+{
+  "name": "robo-consultorio-rascunho",
+  "version": "1.0.0",
+  "description": "RASCUNHO incompleto do robô de WhatsApp do consultório",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {},
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^1.7.0"
+  },
+  "type": "module",
+  "private": true,
+  "engines": {
+    "node": ">=22.5"
+  }
+}
