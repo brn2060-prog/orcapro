@@ -128,7 +128,7 @@ Paciente / Dr. Pablo ──WhatsApp──► Provedor WhatsApp ──webhook─�
 - Webhooks: deduplicar mensagens repetidas e processar uma mensagem por vez para cada paciente.
 - Agrupar mensagens picadas (o paciente manda 3 mensagens seguidas) antes de responder.
 
-> Existe um **rascunho de código** desse robô (agenda, banco SQLite, integração Claude, adaptadores Meta/Evolution e lembretes) feito nesta conversa. Ele **não foi publicado** no repositório, porque a decisão é só apresentar por enquanto.
+> Existe um **rascunho de código incompleto** desse robô na pasta `rascunho-bot/` (agenda, banco SQLite, integração com o Claude, conexão Meta/Evolution e lembretes). Ainda não roda; o `rascunho-bot/README.md` lista o que falta. Só deve ser retomado depois que o Dr. Pablo fechar.
 
 ---
 
